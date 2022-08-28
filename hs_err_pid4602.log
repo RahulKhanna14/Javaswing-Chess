@@ -1,0 +1,121 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007ff20f7c8401, pid=4602, tid=4741
+#
+# JRE version: OpenJDK Runtime Environment (11.0.7+10) (build 11.0.7+10-post-Ubuntu-2ubuntu218.04)
+# Java VM: OpenJDK 64-Bit Server VM (11.0.7+10-post-Ubuntu-2ubuntu218.04, mixed mode, sharing, tiered, compressed oops, serial gc, linux-amd64)
+# Problematic frame:
+# C  [libjimage.so+0x2401]
+#
+# Core dump will be written. Default location: Core dumps may be processed with "/usr/share/apport/apport %p %s %c %d %P %E" (or dumping to /home/runner/Javaswing-Chess/core.4602)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugs.launchpad.net/ubuntu/+source/openjdk-lts
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: Main
+
+Host: Intel(R) Xeon(R) CPU @ 2.30GHz, 4 cores, 512M, Ubuntu 18.04.4 LTS
+Time: Sat Jun 27 00:04:18 2020 UTC elapsed time: 63 seconds (0d 0h 1m 3s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007ff1b8072000):  JavaThread "XToolkt-Shutdown-Thread" [_thread_in_vm, id=4741, stack(0x00007ff1cca61000,0x00007ff1ccb62000)]
+
+Stack: [0x00007ff1cca61000,0x00007ff1ccb62000],  sp=0x00007ff1ccb5f060,  free space=1016k
+Native frames: (J=compiled Java code, A=aot compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  [libjimage.so+0x2401]
+C  [libjimage.so+0x30ea]
+C  [libjimage.so+0x35c6]  JIMAGE_FindResource+0xd6
+V  [libjvm.so+0x59105e]
+V  [libjvm.so+0x593dc0]
+V  [libjvm.so+0xd503b5]
+V  [libjvm.so+0xd4dd4a]
+V  [libjvm.so+0xd50942]
+V  [libjvm.so+0x646dd7]
+V  [libjvm.so+0xa3bb7a]
+V  [libjvm.so+0x843946]
+V  [libjvm.so+0x84483d]
+j  sun.awt.X11.XToolkit.lambda$init$0()V+0 java.desktop@11.0.7
+j  sun.awt.X11.XToolkit$$Lambda$10.run()V+4 java.desktop@11.0.7
+j  java.lang.Thread.run()V+11 java.base@11.0.7
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x84e319]
+V  [libjvm.so+0x84c45d]
+V  [libjvm.so+0x8f62ec]
+V  [libjvm.so+0xd8918f]
+V  [libjvm.so+0xd85acf]
+V  [libjvm.so+0xbd59de]
+
+Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
+j  sun.awt.X11.XToolkit.lambda$init$0()V+0 java.desktop@11.0.7
+j  sun.awt.X11.XToolkit$$Lambda$10.run()V+4 java.desktop@11.0.7
+j  java.lang.Thread.run()V+11 java.base@11.0.7
+v  ~StubRoutines::call_stub
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 1 (SEGV_MAPERR), si_addr: 0x00007ff2070e5cf8
+
+Register to memory mapping:
+
+RAX=0x0000000000004b37 is an unknown value
+RBX=0x00007ff1ccb5f111 is pointing into the stack for thread: 0x00007ff1b8072000
+RCX=0x00007ff2070d301c is an unknown value
+RDX=0x0000000000004b37 is an unknown value
+RSP=0x00007ff1ccb5f060 is pointing into the stack for thread: 0x00007ff1b8072000
+RBP=0x00007ff1ccb5f080 is pointing into the stack for thread: 0x00007ff1b8072000
+RSI=0x00007ff1ccb5f110 is pointing into the stack for thread: 0x00007ff1b8072000
+RDI=0x00007ff20f9cb130: <offset 0x0000000000205130> in /usr/lib/jvm/java-11-openjdk-amd64/lib/libjimage.so at 0x00007ff20f7c6000
+R8 =0x0 is NULL
+R9 =0x00000000ca0d71f0 is an unknown value
+R10=0x00007ff1ccb5f134 is pointing into the stack for thread: 0x00007ff1b8072000
+R11=0x00007ff2163dd3fd: <offset 0x0000000000eb23fd> in /usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so at 0x00007ff21552b000
+R12=0x00007ff1ccb5f110 is pointing into the stack for thread: 0x00007ff1b8072000
+R13=0x00000000000083ac is an unknown value
+R14=0x00007ff1ccb601a8 is pointing into the stack for thread: 0x00007ff1b8072000
+R15=0x00007ff1e40218f0 points into unknown readable memory: 73 75 6e 2f 61 77 74 2f
+
+
+Registers:
+RAX=0x0000000000004b37, RBX=0x00007ff1ccb5f111, RCX=0x00007ff2070d301c, RDX=0x0000000000004b37
+RSP=0x00007ff1ccb5f060, RBP=0x00007ff1ccb5f080, RSI=0x00007ff1ccb5f110, RDI=0x00007ff20f9cb130
+R8 =0x0000000000000000, R9 =0x00000000ca0d71f0, R10=0x00007ff1ccb5f134, R11=0x00007ff2163dd3fd
+R12=0x00007ff1ccb5f110, R13=0x00000000000083ac, R14=0x00007ff1ccb601a8, R15=0x00007ff1e40218f0
+RIP=0x00007ff20f7c8401, EFLAGS=0x0000000000010246, CSGSFS=0x002b000000000033, ERR=0x0000000000000004
+  TRAPNO=0x000000000000000e
+
+Top of Stack: (sp=0x00007ff1ccb5f060)
+0x00007ff1ccb5f060:   0000000000000000 00007ff2100226f0
+0x00007ff1ccb5f070:   0000000000000000 00007ff1ccb5f110
+0x00007ff1ccb5f080:   00007ff1ccb5f0f0 00007ff20f7c90ea
+0x00007ff1ccb5f090:   0000000000000000 0000000000000000 
+
+Instructions: (pc=0x00007ff20f7c8401)
+0x00007ff20f7c8301:   c5 4c 01 e3 48 89 ce e8 d3 f3 ff ff e9 69 fd ff
+0x00007ff20f7c8311:   ff 89 d1 0f b7 74 08 fe 66 41 89 74 0e fe e9 7a
+0x00007ff20f7c8321:   fe ff ff 0f 1f 40 00 8b 08 49 8d 1c 16 41 89 0e
+0x00007ff20f7c8331:   89 d1 8b 74 08 fc 41 89 74 0e fc 48 8d 34 10 48
+0x00007ff20f7c8341:   89 75 b8 e9 0b fe ff ff 0f 1f 80 00 00 00 00 0f
+0x00007ff20f7c8351:   b6 17 55 89 f0 48 89 e5 84 d2 74 22 48 8d 4f 01
+0x00007ff20f7c8361:   0f 1f 80 00 00 00 00 48 83 c1 01 0f b6 f2 0f b6
+0x00007ff20f7c8371:   51 ff 69 c0 93 01 00 01 31 f0 84 d2 75 e9 25 ff
+0x00007ff20f7c8381:   ff ff 7f 5d c3 66 2e 0f 1f 84 00 00 00 00 00 48
+0x00007ff20f7c8391:   85 d2 0f 84 dd 00 00 00 85 c9 0f 84 d5 00 00 00
+0x00007ff20f7c83a1:   55 48 89 e5 41 55 41 54 53 48 8d 5e 01 48 83 ec
+0x00007ff20f7c83b1:   08 44 0f b6 06 45 84 c0 0f 84 a9 00 00 00 49 89
+0x00007ff20f7c83c1:   da b8 93 01 00 01 66 0f 1f 84 00 00 00 00 00 49
+0x00007ff20f7c83d1:   83 c2 01 44 69 c8 93 01 00 01 41 0f b6 c0 45 0f
+0x00007ff20f7c83e1:   b6 42 ff 44 31 c8 45 84 c0 75 e4 25 ff ff ff 7f
+0x00007ff20f7c83f1:   41 89 cd 48 89 d1 31 d2 41 f7 f5 49 89 f4 89 d0
+0x00007ff20f7c8401:   8b 34 81 48 8b 07 ff 50 20 83 f8 00 7e 41 41 0f
+0x00007ff20f7c8411:   b6 14 24 84 d2 74 1c 0f 1f 84 00 00 00 00 00 69
+0x00007ff20f7c8421:   c0 93 01 00 01 48 83 c3 01 31 d0 0f b6 53 ff 84
+0x00007ff20f7c8431:   d2 75 ec 25 ff ff ff 7f 31 d2 41 f7 f5 48 83 c4
+0x00007ff20f7c8441:   08 89 d0 5b 41 5c 41 5d 5d c3 0f 1f 44 00 00 74
+0x00007ff20f7c8451:   1d f7 d0 48 83 c4 08 89 c2 5b 89 d0 41 5c 41 5d
+0x00007ff20f7c8461:   5d c3 0f 1f 44 00 00 b8 93 01 00 01 eb 82 ba ff
+0x00007ff20f7c8471:   ff ff ff eb c8 83 ca ff 89 d0 c3 0f 1f 40 00 0f
+0x00007ff20f7c8481:   b6 17 55 48 89 f8 48 89 e5 84 d2 75 15 eb 1a 38
+0x00007ff20f7c8491:   ca 75 1c 48 83 c0 01 0f b6 10 

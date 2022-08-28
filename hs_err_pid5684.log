@@ -1,0 +1,98 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007f98c44a1401, pid=5684, tid=5689
+#
+# JRE version: OpenJDK Runtime Environment (11.0.7+10) (build 11.0.7+10-post-Ubuntu-2ubuntu218.04)
+# Java VM: OpenJDK 64-Bit Server VM (11.0.7+10-post-Ubuntu-2ubuntu218.04, mixed mode, sharing, tiered, compressed oops, serial gc, linux-amd64)
+# Problematic frame:
+# C  [libjimage.so+0x2401]
+#
+# Core dump will be written. Default location: Core dumps may be processed with "/usr/share/apport/apport %p %s %c %d %P %E" (or dumping to /home/runner/Javaswing-Chess/core.5684)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugs.launchpad.net/ubuntu/+source/openjdk-lts
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: Main
+
+Host: Intel(R) Xeon(R) CPU @ 2.30GHz, 4 cores, 512M, Ubuntu 18.04.4 LTS
+Time: Sat Jun 27 00:24:54 2020 UTC elapsed time: 258 seconds (0d 0h 4m 18s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007f98c0061000):  JavaThread "Signal Dispatcher" daemon [_thread_in_vm, id=5689, stack(0x00007f98a3c63000,0x00007f98a3d64000)]
+
+Stack: [0x00007f98a3c63000,0x00007f98a3d64000],  sp=0x00007f98a3d611e0,  free space=1016k
+Native frames: (J=compiled Java code, A=aot compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  [libjimage.so+0x2401]
+C  [libjimage.so+0x30ea]
+C  [libjimage.so+0x35c6]  JIMAGE_FindResource+0xd6
+V  [libjvm.so+0x59105e]
+V  [libjvm.so+0x593dc0]
+V  [libjvm.so+0xd503b5]
+V  [libjvm.so+0xd4dd4a]
+V  [libjvm.so+0xd50942]
+V  [libjvm.so+0x64589d]
+V  [libjvm.so+0x83ea5c]
+j  jdk.internal.misc.Signal.dispatch(I)V+25 java.base@11.0.7
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x84e319]
+V  [libjvm.so+0x84d105]
+V  [libjvm.so+0xbc377c]
+V  [libjvm.so+0xd8918f]
+V  [libjvm.so+0xd85acf]
+V  [libjvm.so+0xbd59de]
+
+Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
+j  jdk.internal.misc.Signal.dispatch(I)V+25 java.base@11.0.7
+v  ~StubRoutines::call_stub
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 1 (SEGV_MAPERR), si_addr: 0x00007f98b791b498
+
+Register to memory mapping:
+
+RAX=0x000000000000391f is an unknown value
+RBX=0x00007f98a3d61291 is pointing into the stack for thread: 0x00007f98c0061000
+RCX=0x00007f98b790d01c is an unknown value
+RDX=0x000000000000391f is an unknown value
+RSP=0x00007f98a3d611e0 is pointing into the stack for thread: 0x00007f98c0061000
+RBP=0x00007f98a3d61200 is pointing into the stack for thread: 0x00007f98c0061000
+RSI=0x00007f98a3d61290 is pointing into the stack for thread: 0x00007f98c0061000
+RDI=0x00007f98c46a4130: <offset 0x0000000000205130> in /usr/lib/jvm/java-11-openjdk-amd64/lib/libjimage.so at 0x00007f98c449f000
+R8 =0x0 is NULL
+R9 =0x0000000076100fa4 is an unknown value
+R10=0x00007f98a3d612b3 is pointing into the stack for thread: 0x00007f98c0061000
+R11=0x00007f98c6f223fd: <offset 0x0000000000eb23fd> in /usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so at 0x00007f98c6070000
+R12=0x00007f98a3d61290 is pointing into the stack for thread: 0x00007f98c0061000
+R13=0x00000000000083ac is an unknown value
+R14=0x00007f98a3d62328 is pointing into the stack for thread: 0x00007f98c0061000
+R15=0x00007f98c0061680 points into unknown readable memory: 6a 64 6b 2f 69 6e 74 65
+
+
+Registers:
+RAX=0x000000000000391f, RBX=0x00007f98a3d61291, RCX=0x00007f98b790d01c, RDX=0x000000000000391f
+RSP=0x00007f98a3d611e0, RBP=0x00007f98a3d61200, RSI=0x00007f98a3d61290, RDI=0x00007f98c46a4130
+R8 =0x0000000000000000, R9 =0x0000000076100fa4, R10=0x00007f98a3d612b3, R11=0x00007f98c6f223fd
+R12=0x00007f98a3d61290, R13=0x00000000000083ac, R14=0x00007f98a3d62328, R15=0x00007f98c0061680
+RIP=0x00007f98c44a1401, EFLAGS=0x0000000000010246, CSGSFS=0x002b000000000033, ERR=0x0000000000000004
+  TRAPNO=0x000000000000000e
+
+Top of Stack: (sp=0x00007f98a3d611e0)
+0x00007f98a3d611e0:   0000000000000000 00007f98c00226f0
+0x00007f98a3d611f0:   0000000000000000 00007f98a3d61290
+0x00007f98a3d61200:   00007f98a3d61270 00007f98c44a20ea
+0x00007f98a3d61210:   0000000000000000 0000000000000000 
+
+Instructions: (pc=0x00007f98c44a1401)
+0x00007f98c44a1301:   c5 4c 01 e3 48 89 ce e8 d3 f3 ff ff e9 69 fd ff
+0x00007f98c44a1311:   ff 89 d1 0f b7 74 08 fe 66 41 89 74 0e fe e9 7a
+0x00007f98c44a1321:   fe ff ff 0f 1f 40 00 8b 08 49 8d 1c 16 41 89 0e
+0x00007f98c44a1331:   89 d1 8b 74 08 fc 41 89 74 0e fc 48 8d 34 10 48
+0x00007f98c44a1341:   89 75 b8 e9 0b fe ff ff 0f 1f 80 00 00 00 00 0f
+0x00007f98c44a1351:   b6 17 55 89 f0 48 89 e5 84 d2 74 22 48 8d 4f 01
+0x00007f98c44a1361:   0f 1f 80 00 00 00 00 48 83 c1 01 0f b6 f2 0f b6
+0x00007f98c44a1371:   51 ff 69 c0 93 01 00 01 31 f0 84 d2 75 e9 25 ff
+0x00007f98c44a1381:   ff ff 7f 5d c3 66 2e 0f 1f 84 00 00 00

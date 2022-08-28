@@ -1,0 +1,94 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007f98183c2401, pid=5962, tid=5967
+#
+# JRE version: OpenJDK Runtime Environment (11.0.7+10) (build 11.0.7+10-post-Ubuntu-2ubuntu218.04)
+# Java VM: OpenJDK 64-Bit Server VM (11.0.7+10-post-Ubuntu-2ubuntu218.04, mixed mode, sharing, tiered, compressed oops, serial gc, linux-amd64)
+# Problematic frame:
+# C  [libjimage.so+0x2401]
+#
+# Core dump will be written. Default location: Core dumps may be processed with "/usr/share/apport/apport %p %s %c %d %P %E" (or dumping to /home/runner/Javaswing-Chess/core.5962)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugs.launchpad.net/ubuntu/+source/openjdk-lts
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: Main
+
+Host: Intel(R) Xeon(R) CPU @ 2.30GHz, 4 cores, 512M, Ubuntu 18.04.4 LTS
+Time: Sat Jun 27 00:27:47 2020 UTC elapsed time: 73 seconds (0d 0h 1m 13s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007f9814059000):  JavaThread "Signal Dispatcher" daemon [_thread_in_vm, id=5967, stack(0x00007f97f7c63000,0x00007f97f7d64000)]
+
+Stack: [0x00007f97f7c63000,0x00007f97f7d64000],  sp=0x00007f97f7d611e0,  free space=1016k
+Native frames: (J=compiled Java code, A=aot compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  [libjimage.so+0x2401]
+C  [libjimage.so+0x30ea]
+C  [libjimage.so+0x35c6]  JIMAGE_FindResource+0xd6
+V  [libjvm.so+0x59105e]
+V  [libjvm.so+0x593dc0]
+V  [libjvm.so+0xd503b5]
+V  [libjvm.so+0xd4dd4a]
+V  [libjvm.so+0xd50942]
+V  [libjvm.so+0x64589d]
+V  [libjvm.so+0x83ea5c]
+j  jdk.internal.misc.Signal.dispatch(I)V+25 java.base@11.0.7
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x84e319]
+V  [libjvm.so+0x84d105]
+V  [libjvm.so+0xbc377c]
+V  [libjvm.so+0xd8918f]
+V  [libjvm.so+0xd85acf]
+V  [libjvm.so+0xbd59de]
+
+Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
+j  jdk.internal.misc.Signal.dispatch(I)V+25 java.base@11.0.7
+v  ~StubRoutines::call_stub
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 1 (SEGV_MAPERR), si_addr: 0x00007f980b91b498
+
+Register to memory mapping:
+
+RAX=0x000000000000391f is an unknown value
+RBX=0x00007f97f7d61291 is pointing into the stack for thread: 0x00007f9814059000
+RCX=0x00007f980b90d01c is an unknown value
+RDX=0x000000000000391f is an unknown value
+RSP=0x00007f97f7d611e0 is pointing into the stack for thread: 0x00007f9814059000
+RBP=0x00007f97f7d61200 is pointing into the stack for thread: 0x00007f9814059000
+RSI=0x00007f97f7d61290 is pointing into the stack for thread: 0x00007f9814059000
+RDI=0x00007f98185c5130: <offset 0x0000000000205130> in /usr/lib/jvm/java-11-openjdk-amd64/lib/libjimage.so at 0x00007f98183c0000
+R8 =0x0 is NULL
+R9 =0x0000000076100fa4 is an unknown value
+R10=0x00007f97f7d612b3 is pointing into the stack for thread: 0x00007f9814059000
+R11=0x00007f981ae433fd: <offset 0x0000000000eb23fd> in /usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so at 0x00007f9819f91000
+R12=0x00007f97f7d61290 is pointing into the stack for thread: 0x00007f9814059000
+R13=0x00000000000083ac is an unknown value
+R14=0x00007f97f7d62328 is pointing into the stack for thread: 0x00007f9814059000
+R15=0x00007f9814059740 points into unknown readable memory: 6a 64 6b 2f 69 6e 74 65
+
+
+Registers:
+RAX=0x000000000000391f, RBX=0x00007f97f7d61291, RCX=0x00007f980b90d01c, RDX=0x000000000000391f
+RSP=0x00007f97f7d611e0, RBP=0x00007f97f7d61200, RSI=0x00007f97f7d61290, RDI=0x00007f98185c5130
+R8 =0x0000000000000000, R9 =0x0000000076100fa4, R10=0x00007f97f7d612b3, R11=0x00007f981ae433fd
+R12=0x00007f97f7d61290, R13=0x00000000000083ac, R14=0x00007f97f7d62328, R15=0x00007f9814059740
+RIP=0x00007f98183c2401, EFLAGS=0x0000000000010246, CSGSFS=0x002b000000000033, ERR=0x0000000000000004
+  TRAPNO=0x000000000000000e
+
+Top of Stack: (sp=0x00007f97f7d611e0)
+0x00007f97f7d611e0:   0000000000000000 00007f98140226f0
+0x00007f97f7d611f0:   0000000000000000 00007f97f7d61290
+0x00007f97f7d61200:   00007f97f7d61270 00007f98183c30ea
+0x00007f97f7d61210:   0000000000000000 0000000000000000 
+
+Instructions: (pc=0x00007f98183c2401)
+0x00007f98183c2301:   c5 4c 01 e3 48 89 ce e8 d3 f3 ff ff e9 69 fd ff
+0x00007f98183c2311:   ff 89 d1 0f b7 74 08 fe 66 41 89 74 0e fe e9 7a
+0x00007f98183c2321:   fe ff ff 0f 1f 40 00 8b 08 49 8d 1c 16 41 89 0e
+0x00007f98183c2331:   89 d1 8b 74 08 fc 41 89 74 0e fc 48 8d 34 10 48
+0x00007f98183c2341:   89 75
