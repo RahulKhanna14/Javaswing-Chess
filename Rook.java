@@ -6,11 +6,12 @@ public class Rook extends Piece{
     this.color = color;
     this.name = color.charAt(0) + "Rook";
     this.moved = m;
+    this.value = 9;
 
   }
   public ArrayList<Move> getMoves(Piece[][]board){
     ArrayList<Move> moves = new ArrayList<Move>();
-    for(int i = 1; i < 8; i++){
+    for(int i = 1; i < 8; i++){ //add all possible moves for rook, assuming not invalid, and stop once another piece is reached
       if(col + i < 8){
 
         if(board[row][col+i] != null){

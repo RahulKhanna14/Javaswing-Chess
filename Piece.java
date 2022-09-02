@@ -8,6 +8,8 @@ abstract public class Piece{
   public boolean moved = false;
   public boolean castle = false;
   public boolean attack = false;
+  public boolean passant = false;
+  public double value = 0;
   abstract public ArrayList<Move> getMoves(Piece[][]board);
 
 

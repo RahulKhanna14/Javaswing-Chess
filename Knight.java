@@ -5,12 +5,13 @@ public class Knight extends Piece{
     this.col = col;
     this.color = color;
     this.name = color.charAt(0) + "Knight";
+    this.value = 5.7;
   
   }
   public ArrayList<Move> getMoves(Piece[][]board){
     
     ArrayList<Move> moves = new ArrayList<Move>();
-    moves.add(new Move(this, row - 2, col - 1));
+    moves.add(new Move(this, row - 2, col - 1)); //add all possible moves
     moves.add(new Move(this, row - 2, col + 1));
     moves.add(new Move(this, row + 2, col - 1));
     moves.add(new Move(this, row + 2, col + 1));
@@ -19,7 +20,7 @@ public class Knight extends Piece{
     moves.add(new Move(this, row + 1, col + 2));
     moves.add(new Move(this, row + 1, col - 2));
     int a = 8;
-    for(int i = 0; i < a; i ++){
+    for(int i = 0; i < a; i ++){ //go through and remove invalid moves, either edge cases or intersecting with it's own color
       int newrow = moves.get(i).r;
       int newcol = moves.get(i).c;
       if(newrow < 8 && newrow > -1){
