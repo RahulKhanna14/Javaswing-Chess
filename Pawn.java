@@ -1,10 +1,13 @@
 import java.util.*;
 public class Pawn extends Piece{
-  public Pawn(int row, int col, String color){
+  public Pawn(int row, int col, String color, boolean p, boolean m, double v){
     this.row = row;
     this.col = col;
     this.color = color;
+    this.passant = p;
+    this.moved = m;
     this.name = color.charAt(0) + "Pawn";
+    this.value = v;
   }
   public ArrayList<Move> getMoves(Piece[][]board){
     ArrayList<Move> moves = new ArrayList<Move>();
@@ -60,8 +63,74 @@ public class Pawn extends Piece{
         }
       }
     }
+
+    
+    //account for en passant by going through all possible cases
+    if(color == "white" && col == 0){
+      if(checkPassant(board, row,col+1) && board[row-1][col+1] == null){
+        moves.add(new Move(this, row-1, col+1));
+      }
+    }
+    else if(color == "white" && col == 7){
+      if(checkPassant(board, row,col-1)&& board[row-1][col-1] == null){
+        moves.add(new Move(this, row-1, col-1));
+      }
+    }
+    else if (color == "white"){
+      if(checkPassant(board, row,col-1)&& board[row-1][col-1] == null){
+        moves.add(new Move(this, row - 1, col - 1));
+      }
+      if(checkPassant(board, row,col+1)&& board[row-1][col+1] == null){
+        moves.add(new Move(this, row - 1, col + 1));
+      }
+    }
+
+    if(color == "black" && col == 0){
+      if(checkPassant(board, row,col+1) && board[row+1][col+1] == null){
+        moves.add(new Move(this, row+1, col+1));
+      }
+    }
+    else if(color == "black" && col == 7){
+      if(checkPassant(board, row,col-1)&& board[row+1][col-1] == null){
+        moves.add(new Move(this, row+1, col-1));
+      }
+    }
+    else if (color == "black"){
+      if(checkPassant(board, row,col-1)&& board[row+1][col-1] == null){
+        moves.add(new Move(this, row + 1, col - 1));
+      }
+      if(checkPassant(board, row,col+1)&& board[row+1][col+1] == null){
+        moves.add(new Move(this, row + 1, col + 1));
+      }
+    }
+
+
+
+    
   for(Move m : moves){
   }
   return moves;
   }
+
+  public boolean checkPassant(Piece[][] board, int row1, int col1){ //function to check if a certain piece is in position for en passant
+    if(board[row1][col1] != null){
+      if (board[row1][col1].name.equals("wPawn")){
+        if(board[row1][col1].passant == true){
+          return true;
+        }
+      }
+      if (board[row1][col1].name.equals("bPawn")){
+        if(board[row1][col1].passant == true){
+          return true;
+        }
+      }
+    }
+    else{
+      return false;
+    }
+    return false;
+  }
+
+
+  
 }

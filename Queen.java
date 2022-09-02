@@ -5,6 +5,7 @@ public class Queen extends Piece{
     this.col = col;
     this.color = color;
     this.name = color.charAt(0) + "Queen";
+    this.value = 16.9;
   }
   public ArrayList<Move> getMoves(Piece[][]board){
     ArrayList<Move> moves = new ArrayList<Move>();
