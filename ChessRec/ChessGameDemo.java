@@ -22,6 +22,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   int kingrow = 0;
   int kingcol = 0;
   boolean gameOver = false;
+  boolean answered = false;
+  int difficulty = 3;
 
   Piece[][] board;
   Piece WhiteKing;
@@ -36,8 +38,55 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   ArrayList<Move> allmovelist;
 
   public ChessGameDemo() {
+    //final int[] difficulty = {3};
+    JFrame frame2 = new JFrame("Select Difficulty");
+    frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame2.setSize(300,200);
+    frame2.setAlwaysOnTop(true);
+    frame2.setLocationRelativeTo( null );
+    Color lightgrey = new Color(241, 243, 244);
+    JPanel buttons = new JPanel();
+    buttons.setLayout(new GridLayout(3,1));
+    JButton easy = new JButton("Very Easy");
+    JButton medium = new JButton("Medium");
+    JButton tough = new JButton("Tough");
+    buttons.add(easy);
+    buttons.add(medium);
+    buttons.add(tough);
+    frame2.add(BorderLayout.CENTER, buttons);
+    frame2.setVisible(true);
 
-    System.out.println("It is white's turn. ");
+    easy.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        difficulty = 1;
+        System.out.println("Difficulty set to easy.\n The AI selects randomly.\n");
+        answered = true;
+        frame2.setVisible(false);
+        frame2.dispose();
+
+      }
+    });
+    medium.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        difficulty = 2;
+        System.out.println("Difficulty set to medium.\n The AI analyzes 2 moves deep.\n");
+        frame2.setVisible(false);
+        answered = true;
+        frame2.dispose();
+      }
+    });
+    tough.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        difficulty = 3;
+        System.out.println("Difficulty set to tough.\n The AI analyzes 3+ moves deep.\n");
+        frame2.setVisible(false);
+        answered = true;
+        frame2.dispose();
+      }
+    });
+
+
+
     masterlist = new ArrayList<Move>();
     movelist = new ArrayList<Move>();
     movelist2 = new ArrayList<Move>();
@@ -120,6 +169,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
     }
     masterlist = blackgetAllMoves(board); // initializes masterlist before proceeding
+    System.out.println("It is white's turn. ");
   }
 
   public static void wait(int ms) // function to delay timer by ms seconds
@@ -220,6 +270,24 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
             movelist.remove(movelist.get(i));
             i -= 1;
           }
+          if(board[temprow][tempcol].name.contains("King")){
+            int rowey = temprow;
+            int coley = tempcol;
+            if(board[temprow][tempcol].moved == false){
+              if((coley - 1 > -1) && tempcol == 6){
+                if(checkWhiteAttacked(board, rowey, coley - 1)){
+                  movelist.remove(movelist.get(i));
+                  i -= 1;
+                }
+              }
+              else if ((coley + 1 < 8) && tempcol == 2){
+                if(checkWhiteAttacked(board, rowey, coley + 1)){
+                  movelist.remove(movelist.get(i));
+                  i -= 1;
+                }
+              }
+            }
+          }
           board[oldrow][oldcol] = board[temprow][tempcol];
           board[oldrow][oldcol].row = oldrow;
           board[oldrow][oldcol].col = oldcol;
@@ -241,6 +309,24 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           if (checkblackking(board) == true) {
             movelist.remove(movelist.get(i));
             i -= 1;
+          }
+          if(board[temprow][tempcol].name.contains("King")){
+            int rowey = temprow;
+            int coley = tempcol;
+            if(board[temprow][tempcol].moved == false){
+              if((coley - 1 > -1) && tempcol == 6){
+                if(checkBlackAttacked(board, rowey, coley - 1)){
+                  movelist.remove(movelist.get(i));
+                  i -= 1;
+                }
+              }
+              else if ((coley + 1 < 8) && tempcol == 2){
+                if(checkBlackAttacked(board, rowey, coley + 1)){
+                  movelist.remove(movelist.get(i));
+                  i -= 1;
+                }
+              }
+            }
           }
           board[oldrow][oldcol] = board[temprow][tempcol];
           board[oldrow][oldcol].row = oldrow;
@@ -333,6 +419,30 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         if (b[possr][possc].name.equals("bKing")) {
           return true;
         }
+      }
+    }
+    return false;
+  }
+
+  public boolean checkWhiteAttacked(Piece[][] b, int row, int col){
+    ArrayList<Move> some = blackgetAllMoves(board);
+    for (int k = 0; k < some.size(); k++) {
+      int possr = some.get(k).r;
+      int possc = some.get(k).c;
+      if (possr == row && possc == col) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean checkBlackAttacked(Piece[][] b, int row, int col){
+    ArrayList<Move> some = whitegetAllMoves(board);
+    for (int k = 0; k < some.size(); k++) {
+      int possr = some.get(k).r;
+      int possc = some.get(k).c;
+      if (possr == row && possc == col) {
+        return true;
       }
     }
     return false;
@@ -857,6 +967,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
               System.out.println("\n---Stalemate; it's a draw!");
               colorKing(board, "b", "gray");
               colorKing(board, "w", "gray");
+              gameOver = true;
             }
           } 
           
@@ -906,6 +1017,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
               System.out.println("\n---Stalemate; it's a draw!");
               colorKing(board, "b", "gray");
               colorKing(board, "w", "gray");
+              gameOver = true;
             }
           }
           
@@ -937,18 +1049,24 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     int maxIndex = 0;
     double maxValue = -500;
     int rand = 0;
-    /**
-     for (int t = 0; t < movelist.size(); t++){
-     double curr = evaluatePosition(board, movelist.get(t), 1);
-     if(curr > maxValue){
-     maxValue = curr;
-     maxIndex = t;
-     }
-     }
-     rand = maxIndex;
-     **/
-    Collections.shuffle(movelist);
-    rand = (int) evaluatePosition2(board, movelist, 3, -50000, 50000)[1];
+
+    if(difficulty == 1){ //Easy level; just choose random
+      rand = (int) (Math.random() * movelist.size());
+    }
+    else if(difficulty == 2){ //Medium level; goes two layers deep
+      for (int t = 0; t < movelist.size(); t++){
+        double curr = evaluatePosition(board, movelist.get(t), 1);
+        if(curr > maxValue){
+          maxValue = curr;
+          maxIndex = t;
+        }
+      }
+      rand = maxIndex;
+    }
+    else{ //Tough level; goes three moves deep + alpha/beta pruning
+      Collections.shuffle(movelist);
+      rand = (int) evaluatePosition2(board, movelist, 3, -50000, 50000)[1];
+    }
 
     //once move is obtained, easy to implement
     pieceR = movelist.get(rand).piecemove.row;
@@ -1027,6 +1145,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       System.out.println("\n---Stalemate; it's a draw!");
       colorKing(board, "b", "gray");
       colorKing(board, "w", "gray");
+      gameOver = true;
     }
 
 
@@ -1143,7 +1262,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
       if ((board[r][C].name.equals("wKing")) && board[r][C].moved == false) { // if king moved, and hasnt moved
         // until now
-        if (r == 7 && C == 6) {
+        if ((r == 7 && C == 6)){
           board[r][C].moved = true;
           board[r][C].castle = true;
 
@@ -1165,7 +1284,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           board[7][7] = null;
         }
 
-        else if (r == 7 && C == 2) {
+        else if ((r == 7 && C == 2)) {
           board[r][C].moved = true;
           board[r][C].castle = true;
 
@@ -1196,7 +1315,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
       if ((board[r][C].name.equals("bKing")) && board[r][C].moved == false) { // if king moved, and hasnt moved
         // until now
-        if (r == 0 && C == 6) {
+        if ((r == 0 && C == 6)) {
           board[r][C].moved = true;
           board[r][C].castle = true;
 
@@ -1218,7 +1337,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           board[0][7] = null;
         }
 
-        else if (r == 0 && C == 2) {
+        else if ((r == 0 && C == 2)) {
           board[r][C].moved = true;
           board[r][C].castle = true;
 
