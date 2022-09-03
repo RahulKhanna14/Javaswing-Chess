@@ -1,3 +1,5 @@
+package ChessRec;
+
 import java.util.*;
 public class Knight extends Piece{
   public Knight(int row, int col, String color){
@@ -5,7 +7,7 @@ public class Knight extends Piece{
     this.col = col;
     this.color = color;
     this.name = color.charAt(0) + "Knight";
-    this.value = 5.7;
+    this.value = 70;
   
   }
   public ArrayList<Move> getMoves(Piece[][]board){

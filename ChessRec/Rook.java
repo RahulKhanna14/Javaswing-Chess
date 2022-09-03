@@ -1,3 +1,5 @@
+package ChessRec;
+
 import java.util.*;
 public class Rook extends Piece{
   public Rook(int row, int col, String color, boolean m){
@@ -6,7 +8,7 @@ public class Rook extends Piece{
     this.color = color;
     this.name = color.charAt(0) + "Rook";
     this.moved = m;
-    this.value = 9;
+    this.value = 120;
 
   }
   public ArrayList<Move> getMoves(Piece[][]board){

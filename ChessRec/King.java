@@ -1,3 +1,5 @@
+package ChessRec;
+
 import java.util.*;
 
 public class King extends Piece {
@@ -10,7 +12,7 @@ public class King extends Piece {
     this.castle = c;
     this.moved = m;
     this.attack = att;
-    this.value = 30;
+    this.value = 500;
   }
 
   public ArrayList<Move> getMoves(Piece[][] board) { //iterate through all 8 directions and add valid moves

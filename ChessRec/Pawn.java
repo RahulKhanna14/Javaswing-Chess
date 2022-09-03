@@ -1,13 +1,15 @@
+package ChessRec;
+
 import java.util.*;
 public class Pawn extends Piece{
-  public Pawn(int row, int col, String color, boolean p, boolean m, double v){
+  public Pawn(int row, int col, String color, boolean p, boolean m){
     this.row = row;
     this.col = col;
     this.color = color;
     this.passant = p;
     this.moved = m;
     this.name = color.charAt(0) + "Pawn";
-    this.value = v;
+    this.value = 20;
   }
   public ArrayList<Move> getMoves(Piece[][]board){
     ArrayList<Move> moves = new ArrayList<Move>();
@@ -57,7 +59,7 @@ public class Pawn extends Piece{
           moves.add(new Move(this, row - 1, col + 1));
         }
       }
-      if(row - 1 < 8 && col - 1 > -1){
+      if((row - 1 < 8 && col - 1 > -1) && row - 1 > -1){
         if(board[row-1][col-1] != null && board[row-1][col-1].color != color){
           moves.add(new Move(this, row - 1, col - 1));
         }

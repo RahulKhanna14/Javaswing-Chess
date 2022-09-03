@@ -1,3 +1,5 @@
+package ChessRec;
+
 import java.util.*;
 
 public class Bishop extends Piece {
@@ -6,6 +8,7 @@ public class Bishop extends Piece {
     this.col = col;
     this.color = color;
     this.name = color.charAt(0) + "Bishop";
+    this.value = 80;
   }
 
   public ArrayList<Move> getMoves(Piece[][] board) {

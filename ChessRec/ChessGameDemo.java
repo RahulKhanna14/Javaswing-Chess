@@ -1,10 +1,15 @@
+package ChessRec;
+
+import ChessRec.Move;
+import ChessRec.Piece;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import javax.swing.*;
 
 //while gameover is false
-class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener {
+public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener {
 
   JLayeredPane layeredPane;
   JPanel chessBoard;
@@ -43,10 +48,10 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
     // 2D array
     board = new Piece[8][8];
     for (int j = 0; j < 8; j++) { // initialize board with backend pieces; store values to be accessed later
-      board[6][j] = new Pawn(6, j, "white", false, false, 1.45-0.1*Math.abs(4-j));
+      board[6][j] = new Pawn(6, j, "white", false, false);
     }
     for (int j = 0; j < 8; j++) {
-      board[1][j] = new Pawn(1, j, "black", false, false, 1.45 - 0.1*Math.abs(4-j));
+      board[1][j] = new Pawn(1, j, "black", false, false);
     }
     board[7][1] = new Knight(7, 1, "white");
     board[7][6] = new Knight(7, 6, "white");
@@ -107,7 +112,7 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
         if (board[i][j] != null) {
           String piecename = board[i][j].name;
           int position = (i * 8) + j;
-          piece = new JLabel(new ImageIcon(piecename + ".png"));
+          piece = new JLabel(new ImageIcon("ChessRec/" + piecename + ".png"));
           panel = (JPanel) chessBoard.getComponent(position);
           panel.add(piece);
         }
@@ -115,7 +120,6 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
       }
     }
     masterlist = blackgetAllMoves(board); // initializes masterlist before proceeding
-
   }
 
   public static void wait(int ms) // function to delay timer by ms seconds
@@ -421,7 +425,7 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
   }
 
   public double posMultiplier(int row, int col, Piece p){ //give multiplier value based on position within chess board, for each piece
-    double val = 1;
+    double val = 1.0;
     if(p.name.contains("King")){
       if (((row == 7) && (col == 6)) || ((row == 7) && (col == 2))){
         return 2.5;
@@ -480,8 +484,146 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
   
   } //multiplier to account for board position
 
-  public double evaluatePosition(Piece[][] b, Move m, int depth){
+  public double posMultiplier2(int row, int col, Piece p){
+    double val = 1.0;
+    if(p.name.contains("King")) {
+      int[] kingstable = {
+      20, 30, 10, 0, 0, 10, 30, 20,
+              20, 20, 0, 0, 0, 0, 20, 20,
+              -10, -20, -20, -20, -20, -20, -20, -10,
+              -20, -30, -30, -40, -40, -30, -30, -20,
+              -30, -40, -40, -50, -50, -40, -40, -30,
+              -30, -40, -40, -50, -50, -40, -40, -30,
+              -30, -40, -40, -50, -50, -40, -40, -30,
+              -30, -40, -40, -50, -50, -40, -40, -30};
+      if(p.name.contains("bKing")){
+        return kingstable[8*row + col];
+      }
+      else{
+        return kingstable[8*(7-row)+col];
+      }
+    }
+    if(p.name.contains("Queen")) {
+      int[] queenstable = {
+      -20, -10, -10, -5, -5, -10, -10, -20,
+              -10, 0, 0, 0, 0, 0, 0, -10,
+              -10, 5, 5, 5, 5, 5, 0, -10,
+              0, 0, 5, 5, 5, 5, 0, -5,
+              -5, 0, 5, 5, 5, 5, 0, -5,
+              -10, 0, 5, 5, 5, 5, 0, -10,
+              -10, 0, 0, 0, 0, 0, 0, -10,
+              -20, -10, -10, -5, -5, -10, -10, -20};
+      if(p.name.contains("bQueen")){
+        return queenstable[8*row + col];
+      }
+      else{
+        return queenstable[8*(7-row)+col];
+      }
+    }
+    if(p.name.contains("Rook")) {
+      int[] rookstable = {
+      0, 0, 0, 5, 5, 0, 0, 0,
+              -5, 0, 0, 0, 0, 0, 0, -5,
+              -5, 0, 0, 0, 0, 0, 0, -5,
+              -5, 0, 0, 0, 0, 0, 0, -5,
+              -5, 0, 0, 0, 0, 0, 0, -5,
+              -5, 0, 0, 0, 0, 0, 0, -5,
+              5, 10, 10, 10, 10, 10, 10, 5,
+              0, 0, 0, 0, 0, 0, 0, 0};
+      if(p.name.contains("bRook")){
+        return rookstable[8*row + col];
+      }
+      else{
+        return rookstable[8*(7-row)+col];
+      }
+    }
+    if(p.name.contains("Bishop")) {
+      int[] bishopstable = {
+      -20, -10, -10, -10, -10, -10, -10, -20,
+              -10, 5, 0, 0, 0, 0, 5, -10,
+              -10, 10, 10, 10, 10, 10, 10, -10,
+              -10, 0, 10, 10, 10, 10, 0, -10,
+              -10, 5, 5, 10, 10, 5, 5, -10,
+              -10, 0, 5, 10, 10, 5, 0, -10,
+              -10, 0, 0, 0, 0, 0, 0, -10,
+              -20, -10, -10, -10, -10, -10, -10, -20};
+      if(p.name.contains("bBishop")){
+        return bishopstable[8*row + col];
+      }
+      else{
+        return bishopstable[8*(7-row)+col];
+      }
+    }
+    if(p.name.contains("Knight")) {
+      int[] knightstable = {
+      -50, -40, -30, -30, -30, -30, -40, -50,
+              -40, -20, 0, 5, 5, 0, -20, -40,
+              -30, 5, 10, 15, 15, 10, 5, -30,
+              -30, 0, 15, 20, 20, 15, 0, -30,
+              -30, 5, 15, 20, 20, 15, 5, -30,
+              -30, 0, 10, 15, 15, 10, 0, -30,
+              -40, -20, 0, 0, 0, 0, -20, -40,
+              -50, -40, -30, -30, -30, -30, -40, -50};
+      if(p.name.contains("bKnight")){
+        return knightstable[8*row + col];
+      }
+      else{
+        return knightstable[8*(7-row)+col];
+      }
+    }
+    if(p.name.contains("Pawn")) {
+      int[] pawntable = {
+      0, 0, 0, 0, 0, 0, 0, 0,
+              5, 10, 10, -20, -20, 10, 10, 5,
+              5, -5, -10, 0, 0, -10, -5, 5,
+              0, 0, 0, 20, 20, 0, 0, 0,
+              5, 5, 10, 25, 25, 10, 5, 5,
+              10, 10, 20, 30, 30, 20, 10, 10,
+              50, 50, 50, 50, 50, 50, 50, 50,
+              0, 0, 0, 0, 0, 0, 0, 0};
+
+      if(p.name.contains("bPawn")){
+        return pawntable[8*row + col];
+      }
+      else{
+        return pawntable[8*(7-row)+col];
+      }
+    }
+    else{
+      return 0;
+    }
+
+  }
+
+  public double evalBoard(Piece[][] b){
+    double total = 0;
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        if (b[i][j] != null && b[i][j].color == "white") {
+          total -= ((2 * b[i][j].value) + (posMultiplier2(i, j, b[i][j])));
+        } else if (b[i][j] != null && b[i][j].color == "black") {
+          total += (2 * b[i][j].value) + (posMultiplier2(i, j, b[i][j]));
+        }
+      }
+    }
+    if (checkwhiteking(board)) {
+      total += 10;
+    }
+    if (checkblackking(board)){
+      total -= 10;
+    }
+    if (WhiteGetSafeMoves(board).size() == 0){
+      total = 500000;
+    }
+    if (BlackGetSafeMoves(board).size() == 0){
+      total = -500000;
+    }
+    return total;
+  }
+
+  public double evaluatePosition(Piece[][] b, Move m, int depth) {
     double min = 99999;
+    boolean mate = false;
     int newrow = m.r;
     int newcol = m.c;
     int oldrow = m.piecemove.row;
@@ -493,55 +635,111 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
     b[newrow][newcol].col = newcol;
     b[oldrow][oldcol] = null;
     double total = 0;
-    if(checkwhiteking(board)){
-      total += 5;
-    }
-    if (depth == 1){
-    ArrayList<Move> whiteSpace = WhiteGetSafeMoves(board);
-    if(whiteSpace.size() == 0){ //check for mate
-      return 999999;
-    }
-    for (int k=0; k < whiteSpace.size(); k++){
-      double tempV = evaluatePosition(b, whiteSpace.get(k), 2);
-      if(tempV < min){
-        min = tempV;
+
+    if (depth == 1) {
+      ArrayList<Move> whiteSpace = WhiteGetSafeMoves(board);
+      if (whiteSpace.size() == 0) { //check for mate
+        mate = true;
+      }
+      if (mate != true) {
+        for (int k = 0; k < whiteSpace.size(); k++) {
+          double tempV = evaluatePosition(b, whiteSpace.get(k), 2);
+          if (tempV < min) {
+            min = tempV;
+          }
+        }
+      }}
+      if(mate != true){
+
+        for (int i = 0; i < 8; i++) {
+          for (int j = 0; j < 8; j++) {
+            if (b[i][j] != null && b[i][j].color == "white") {
+              total -= ((b[i][j].value) + (posMultiplier2(i, j, b[i][j])));
+            } else if (b[i][j] != null && b[i][j].color == "black") {
+              total += (b[i][j].value) + (posMultiplier2(i, j, b[i][j]));
+            }
+          }
+        }
+        if (checkwhiteking(board)) {
+          total += 10;
+        }
+      }
+
+
+      b[oldrow][oldcol] = b[newrow][newcol];
+      b[oldrow][oldcol].row = oldrow;
+      b[oldrow][oldcol].col = oldcol;
+      b[newrow][newcol] = original;
+      if (mate == true) {
+        return 999999;
+      } else if (depth == 2) {
+        return total;
+      } else {
+        return min;
       }
     }
+
+  public double[] evaluatePosition2(Piece[][] b, ArrayList<Move> mlist, int depth, double alpha, double beta) { //if depth odd, maximizing player
+    double optimalVal;
+    double val;
+    int optimalIndex = 0; //the best move
+    if(depth == 0){
+      double n = evalBoard(b);
+      return (new double[]{n, 0});
     }
-    
-    for(int i = 0; i < 8; i++){
-      for(int j = 0; j < 8; j++){
-        if(b[i][j] != null && b[i][j].color == "white"){
-          total -= (b[i][j].value) * (posMultiplier(i, j, b[i][j]));
-          total -= b[i][j].value;
-        }
-        else if(b[i][j] != null && b[i][j].color == "black"){
-          total += (b[i][j].value) * (posMultiplier(i, j, b[i][j]));
-          total += b[i][j].value;
-        }
-      }
-    }
-    
-    b[oldrow][oldcol] = b[newrow][newcol];
-    b[oldrow][oldcol].row = oldrow;
-    b[oldrow][oldcol].col = oldcol;
-    b[newrow][newcol] = original;
-    if(depth == 2){
-    return total;
+    if(depth % 2 == 1){
+      optimalVal = -10000;
     }
     else{
-      return min;
+      optimalVal = 10000;
     }
+    for(int i = 0; i < mlist.size(); i++){
+      Move m = mlist.get(i);
+      int newrow = m.r;
+      int newcol = m.c;
+      int oldrow = m.piecemove.row;
+      int oldcol = m.piecemove.col;
+      Piece original = b[newrow][newcol];
+      b[newrow][newcol] = b[oldrow][oldcol];
+      b[newrow][newcol].row = newrow;
+      b[newrow][newcol].col = newcol;
+      b[oldrow][oldcol] = null;
+      if(depth % 2 == 1) {
+        ArrayList<Move> whiteSpace = WhiteGetSafeMoves(b);
+        val = evaluatePosition2(b, whiteSpace, depth-1, alpha, beta)[0];
+      }
+      else{
+        ArrayList<Move> blackSpace = BlackGetSafeMoves(b);
+        val = evaluatePosition2(b, blackSpace, depth - 1, alpha, beta)[0];
+      }
+
+      if(depth % 2 == 1){ //if looking at white
+        if(val > optimalVal){
+          optimalVal = val;
+          optimalIndex = i;
+        }
+        alpha = Math.max(alpha, val);
+      }
+
+      else{
+        if(val < optimalVal){
+          optimalVal = val;
+          optimalIndex = i;
+        }
+        beta = Math.min(beta, val);
+      }
+      b[oldrow][oldcol] = b[newrow][newcol];
+      b[oldrow][oldcol].row = oldrow;
+      b[oldrow][oldcol].col = oldcol;
+      b[newrow][newcol] = original;
+      if(beta <= alpha){
+        break;
+      }
+    }
+    return new double[]{optimalVal, optimalIndex};
+
   }
-  
 
-
-
-
-
-
-
-  
   public void mouseDragged(MouseEvent me) { // while mouse moving, piece should follow
 
     if (chessPiece == null)
@@ -576,50 +774,6 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
       movelist = null;
     }
 
-    for (int l = 0; l < 2; l++){
-      if(playernum == 0){ //black
-        
-        movelist = BlackGetSafeMoves(board);
-        //int rand = (int) (Math.random() * movelist.size());
-        int maxIndex = 0;
-        double maxValue = -500;
-        int rand = 0;
-        for (int t = 0; t < movelist.size(); t++){
-          double curr = evaluatePosition(board, movelist.get(t), 1);
-          if(curr > maxValue){
-            maxValue = curr;
-            maxIndex = t;
-          }
-          }
-        rand = maxIndex;
-        System.out.println(maxValue);
-
-        //once move is obtained, easy to implement
-        pieceR = movelist.get(rand).piecemove.row;
-        pieceC = movelist.get(rand).piecemove.col;
-        r = movelist.get(rand).r;
-        C = movelist.get(rand).c;
-        JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
-        JPanel panel7 = (JPanel) chessBoard.getComponent(0);
-        board[r][C] = null;
-        piece7 = new JLabel(new ImageIcon(board[pieceR][pieceC].name+".png"));
-        panel7 = (JPanel) chessBoard.getComponent(8*r+C);
-        panel7.removeAll();
-        panel7.revalidate();
-        panel7.repaint();
-        panel7.add(piece7);
-        panel7 = (JPanel) chessBoard.getComponent(8*pieceR + pieceC);
-        panel7.removeAll();
-        panel7.revalidate();
-        panel7.repaint();
-        board[r][C] = board[pieceR][pieceC];
-        board[r][C].row = r;
-        board[r][C].col = C;
-        board[pieceR][pieceC] = null;
-        
-      }
-
-    
     if (movelist != null) {
       if(playernum == 1){
 
@@ -635,7 +789,9 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
             parent.remove(0);
             parent.add(chessPiece);
           } else {
+
             Container parent = (Container) c;
+
             parent.add(chessPiece);
           }
           chessPiece.setVisible(true);
@@ -653,238 +809,9 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
           return;
         }
       }
-          if (true) {
-            // sweep through and deactivate en passant, so that ONLY VALID FOR 1 MOVE
-            if (playernum == 0) {// black
-              for (int i = 0; i < 7; i++) {
-                for (int j = 0; j < 7; j++) {
-                  if (board[i][j] != null && board[i][j].name.equals("bPawn")) {
-                    board[i][j].passant = false;
-                  }
-                }
-              }
-            }
 
-            if (playernum == 1) {// white
-              for (int i = 0; i < 7; i++) {
-                for (int j = 0; j < 7; j++) {
-                  if (board[i][j] != null && board[i][j].name.equals("wPawn")) {
-                    board[i][j].passant = false;
-                  }
-                }
-              }
-            }
+      checkSpecials(board, r, C);
 
-            // check to trigger pawn "en passant" boolean by going through all cases
-            if (board[r][C].name.equals("wPawn") && r == 4) {
-              if (board[r][C].moved == false) {
-                board[r][C].passant = true;
-                board[r][C].moved = true;
-              }
-            } else if (board[r][C].name.equals("wPawn")) {
-              board[r][C].moved = true;
-              board[r][C].passant = false;
-            }
-
-            if (board[r][C].name.equals("bPawn") && r == 3) {
-              if (board[r][C].moved == false) {
-                board[r][C].passant = true;
-                board[r][C].moved = true;
-              }
-            } else if (board[r][C].name.equals("bPawn")) {
-              board[r][C].moved = true;
-              board[r][C].passant = false;
-            }
-
-            // check if enpassant occured, if so then kill piece
-            if (board[r][C].name.equals("wPawn") && r == 2) {
-              if (board[r + 1][C] != null) {
-                if (board[r + 1][C].name.equals("bPawn") && board[r + 1][C].passant == true) {
-                  JPanel panel6 = (JPanel) chessBoard.getComponent(8 * (r + 1) + C);
-                  panel6.removeAll();
-                  panel6.revalidate();
-                  panel6.repaint();
-                  board[r + 1][C] = null;
-                }
-              }
-            }
-            if (board[r][C].name.equals("bPawn") && r == 5) {
-              if (board[r - 1][C] != null) {
-                if (board[r - 1][C].name.equals("wPawn") && board[r - 1][C].passant == true) {
-                  JPanel panel6 = (JPanel) chessBoard.getComponent(8 * (r - 1) + C);
-                  panel6.removeAll();
-                  panel6.revalidate();
-                  panel6.repaint();
-                  board[r - 1][C] = null;
-                }
-              }
-            }
-
-          } // CODE FOR EN PASSANT
-
-          if (true) {
-            if (board[r][C].name.equals("wPawn") && r == 0) { // if white pawn hits last row, change to queen
-              JLabel piece5 = new JLabel(new ImageIcon("bKnight.png"));
-              JPanel panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
-              board[r][C] = null;
-              panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
-              panel5.removeAll();
-              panel5.revalidate();
-              panel5.repaint();
-              piece5 = new JLabel(new ImageIcon("wQueen.png"));
-              panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
-              panel5.add(piece5);
-              board[r][C] = new Queen(r, C, "white");
-            }
-
-            // check for black pawn promotion
-            if (board[r][C].name.equals("bPawn") && r == 7) {
-              JLabel piece5 = new JLabel(new ImageIcon("wKnight.png"));
-              JPanel panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
-              board[r][C] = null;
-              panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
-              panel5.removeAll();
-              panel5.revalidate();
-              panel5.repaint();
-              piece5 = new JLabel(new ImageIcon("bQueen.png"));
-              panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
-              panel5.add(piece5);
-              board[r][C] = new Queen(r, C, "black");
-            }
-          } // CODE FOR PAWN PROMOTION
-
-          if (true) {
-            // check for castling requirement
-            if (board[r][C].name.equals("wRook")) {
-              board[r][C].moved = true; // signify that rook has moved, cant castle now
-            }
-            if ((board[r][C].name.equals("wKing")) && board[r][C].moved == false) { // if king moved, and hasnt moved
-                                                                                    // until now
-              if (r == 7 && C == 6) {
-                board[r][C].moved = true;
-                board[r][C].castle = true;
-
-                JLabel piece2 = new JLabel(new ImageIcon("bKnight.png")); // just template
-                JPanel panel2 = (JPanel) chessBoard.getComponent(0);
-                board[7][5] = null;
-                piece2 = new JLabel(new ImageIcon("wRook.png"));
-                panel2 = (JPanel) chessBoard.getComponent(61);
-                panel2.add(piece2);
-
-                panel2 = (JPanel) chessBoard.getComponent(63);
-                panel2.removeAll();
-                panel2.revalidate();
-                panel2.repaint();
-
-                board[7][5] = board[7][7];
-                board[7][5].row = 7;
-                board[7][5].col = 5;
-                board[7][7] = null;
-              }
-
-              else if (r == 7 && C == 2) {
-                board[r][C].moved = true;
-                board[r][C].castle = true;
-
-                JLabel piece2 = new JLabel(new ImageIcon("bKnight.png"));
-                JPanel panel2 = (JPanel) chessBoard.getComponent(0);
-                board[7][3] = null;
-                piece2 = new JLabel(new ImageIcon("wRook.png"));
-                panel2 = (JPanel) chessBoard.getComponent(59);
-                panel2.add(piece2);
-
-                panel2 = (JPanel) chessBoard.getComponent(56);
-                panel2.removeAll();
-                panel2.revalidate();
-                panel2.repaint();
-
-                board[7][3] = board[7][0];
-                board[7][3].row = 7;
-                board[7][3].col = 3;
-                board[7][0] = null;
-              } else {
-                board[r][C].moved = true;
-              }
-
-            }
-
-            if (board[r][C].name.equals("bRook")) {
-              board[r][C].moved = true;
-            }
-            if ((board[r][C].name.equals("bKing")) && board[r][C].moved == false) { // if king moved, and hasnt moved
-                                                                                    // until now
-              if (r == 0 && C == 6) {
-                board[r][C].moved = true;
-                board[r][C].castle = true;
-
-                JLabel piece2 = new JLabel(new ImageIcon("bKnight.png"));
-                JPanel panel2 = (JPanel) chessBoard.getComponent(0);
-                board[0][5] = null;
-                piece2 = new JLabel(new ImageIcon("bRook.png"));
-                panel2 = (JPanel) chessBoard.getComponent(5);
-                panel2.add(piece2);
-
-                panel2 = (JPanel) chessBoard.getComponent(7);
-                panel2.removeAll();
-                panel2.revalidate();
-                panel2.repaint();
-
-                board[0][5] = board[0][7];
-                board[0][5].row = 0;
-                board[0][5].col = 5;
-                board[0][7] = null;
-              }
-
-              else if (r == 0 && C == 2) {
-                board[r][C].moved = true;
-                board[r][C].castle = true;
-
-                JLabel piece2 = new JLabel(new ImageIcon("bKnight.png"));
-                JPanel panel2 = (JPanel) chessBoard.getComponent(0);
-                board[0][3] = null;
-                piece2 = new JLabel(new ImageIcon("bRook.png"));
-                panel2 = (JPanel) chessBoard.getComponent(3);
-                panel2.add(piece2);
-
-                panel2 = (JPanel) chessBoard.getComponent(0);
-                panel2.removeAll();
-                panel2.revalidate();
-                panel2.repaint();
-
-                board[0][3] = board[0][0];
-                board[0][3].row = 0;
-                board[0][3].col = 0;
-                board[0][0] = null;
-              } else {
-                board[r][C].moved = true;
-              }
-
-            }
-
-          } // CODE FOR CASTLING
-
-        
-          for (int j = 0; j < 8; j++) { // reset colors again
-            for (int i = 0; i < 8; i++) {
-              JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
-              if (i % 2 == j % 2) {
-                reset.setBackground(Color.blue);
-              } else {
-                reset.setBackground(Color.white);
-              }
-            }
-          } // RESET BOARD
-
-          if (playernum == 0){
-            int compOrig = (pieceR * 8) + pieceC;
-            int compNew = (r * 8) + C;
-            JPanel template5 = (JPanel) chessBoard.getComponent(compOrig);
-            JPanel template6 = (JPanel) chessBoard.getComponent(compNew);
-            template5.setBackground(Color.orange);
-            template6.setBackground(Color.orange.darker());
-          }
-
-      
           if (playernum == 1) { // if white's turn
             boolean checkk = false; // In Check?
             boolean limit = false; // Are there available moves?
@@ -921,6 +848,7 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
             if (checkk == true && limit == true) { // no moves, in check
               System.out.println("\n---White Wins by checkmate!---");
               colorKing(board, "b", "red");
+              playernum = 5;
               gameOver = true;
             } else if (checkk == true && limit == false) { // moves, in check
               System.out.println("\n---Black is in check!---");
@@ -969,6 +897,7 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
             if (checkk == true && limit == true) { // no moves, in check
               System.out.println("\n---Black Wins by checkmate!---");
               colorKing(board, "w", "red");
+              playernum = 5;
               gameOver = true;
             } else if (checkk == true && limit == false) { // moves, in check
               System.out.println("\n---White is in check!---");
@@ -983,23 +912,363 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
         }
     
     if(movelist != null){
-      
+      try {
+        Robot bum = new Robot();
+        Point p = MouseInfo.getPointerInfo().getLocation();
+        bum.mouseMove(p.x+10,p.y);
+      } catch (AWTException awtException) {
+        awtException.printStackTrace();
+      }
+
     }
     else{
       JPanel goback = (JPanel) chessBoard.getComponent(pieceR * 8 + pieceC);
       chessPiece.setVisible(true);
       goback.add(chessPiece);
     }
-    }    
+
 
   }
+
+
+  public void blackMove(Piece[][] b){
+    movelist = BlackGetSafeMoves(board);
+    //int rand = (int) (Math.random() * movelist.size());
+    int maxIndex = 0;
+    double maxValue = -500;
+    int rand = 0;
+    /**
+     for (int t = 0; t < movelist.size(); t++){
+     double curr = evaluatePosition(board, movelist.get(t), 1);
+     if(curr > maxValue){
+     maxValue = curr;
+     maxIndex = t;
+     }
+     }
+     rand = maxIndex;
+     **/
+    Collections.shuffle(movelist);
+    rand = (int) evaluatePosition2(board, movelist, 3, -50000, 50000)[1];
+
+    //once move is obtained, easy to implement
+    pieceR = movelist.get(rand).piecemove.row;
+    pieceC = movelist.get(rand).piecemove.col;
+    int r = movelist.get(rand).r;
+    int C = movelist.get(rand).c;
+    JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
+    JPanel panel7 = (JPanel) chessBoard.getComponent(0);
+    board[r][C] = null;
+    piece7 = new JLabel(new ImageIcon("ChessRec/" + board[pieceR][pieceC].name+".png"));
+    panel7 = (JPanel) chessBoard.getComponent(8*r+C);
+    panel7.removeAll();
+    panel7.revalidate();
+    panel7.repaint();
+    panel7.add(piece7);
+    panel7 = (JPanel) chessBoard.getComponent(8*pieceR + pieceC);
+    panel7.removeAll();
+    panel7.revalidate();
+    panel7.repaint();
+    board[r][C] = board[pieceR][pieceC];
+    board[r][C].row = r;
+    board[r][C].col = C;
+    board[pieceR][pieceC] = null;
+
+    checkSpecials(board, r, C);
+
+    int compOrig = (pieceR * 8) + pieceC;
+    int compNew = (r * 8) + C;
+    JPanel template5 = (JPanel) chessBoard.getComponent(compOrig);
+    JPanel template6 = (JPanel) chessBoard.getComponent(compNew);
+    template5.setBackground(Color.orange);
+    template6.setBackground(Color.orange.darker());
+
+
+    boolean checkk = false; // r we in check?
+    boolean limit = false; // r there no moves left?
+    playernum = 1;
+    System.out.println("\n---------------\n");
+    System.out.println("It is now white's turn.");
+    allmovelist = WhiteGetSafeMoves(board);
+    if (allmovelist.size() < 1) {
+      limit = true;
+    }
+    masterlist = blackgetAllMoves(board);
+    if (checkwhiteking(board) == true) {
+      checkk = true;
+      for (int i = 0; i < 8; i++) { // set parameter
+        for (int j = 0; j < 8; j++) {
+          if (board[i][j] != null) {
+            if (board[i][j].name.equals("wKing")) {
+              board[i][j].attack = true;
+            }
+          }
+        }
+      }
+    } else {
+      for (int i = 0; i < 8; i++) { // set parameter
+        for (int j = 0; j < 8; j++) {
+          if (board[i][j] != null) {
+            if (board[i][j].name.equals("wKing")) {
+              board[i][j].attack = false;
+            }
+          }
+        }
+      }
+    }
+
+    if (checkk == true && limit == true) { // no moves, in check
+      System.out.println("\n---Black Wins by checkmate!---");
+      colorKing(board, "w", "red");
+      gameOver = true;
+    } else if (checkk == true && limit == false) { // moves, in check
+      System.out.println("\n---White is in check!---");
+      colorKing(board, "w", "yellow");
+    } else if (checkk == false && limit == true) {
+      System.out.println("\n---Stalemate; it's a draw!");
+      colorKing(board, "b", "gray");
+      colorKing(board, "w", "gray");
+    }
+
+
+
+  }
+
+  public void checkSpecials(Piece[][] b, int row, int col){
+    int r = row;
+    int C = col;
+    if (true) {
+      // sweep through and deactivate en passant, so that ONLY VALID FOR 1 MOVE
+      if (playernum == 0) {// black
+        for (int i = 0; i < 7; i++) {
+          for (int j = 0; j < 7; j++) {
+            if (board[i][j] != null && board[i][j].name.equals("bPawn")) {
+              board[i][j].passant = false;
+            }
+          }
+        }
+      }
+
+      if (playernum == 1) {// white
+        for (int i = 0; i < 7; i++) {
+          for (int j = 0; j < 7; j++) {
+            if (board[i][j] != null && board[i][j].name.equals("wPawn")) {
+              board[i][j].passant = false;
+            }
+          }
+        }
+      }
+
+      // check to trigger pawn "en passant" boolean by going through all cases
+      if (board[r][C].name.equals("wPawn") && r == 4) {
+        if (board[r][C].moved == false) {
+          board[r][C].passant = true;
+          board[r][C].moved = true;
+        }
+      } else if (board[r][C].name.equals("wPawn")) {
+        board[r][C].moved = true;
+        board[r][C].passant = false;
+      }
+
+      if (board[r][C].name.equals("bPawn") && r == 3) {
+        if (board[r][C].moved == false) {
+          board[r][C].passant = true;
+          board[r][C].moved = true;
+        }
+      } else if (board[r][C].name.equals("bPawn")) {
+        board[r][C].moved = true;
+        board[r][C].passant = false;
+      }
+
+      // check if enpassant occured, if so then kill piece
+      if (board[r][C].name.equals("wPawn") && r == 2) {
+        if (board[r + 1][C] != null) {
+          if (board[r + 1][C].name.equals("bPawn") && board[r + 1][C].passant == true) {
+            JPanel panel6 = (JPanel) chessBoard.getComponent(8 * (r + 1) + C);
+            panel6.removeAll();
+            panel6.revalidate();
+            panel6.repaint();
+            board[r + 1][C] = null;
+          }
+        }
+      }
+      if (board[r][C].name.equals("bPawn") && r == 5) {
+        if (board[r - 1][C] != null) {
+          if (board[r - 1][C].name.equals("wPawn") && board[r - 1][C].passant == true) {
+            JPanel panel6 = (JPanel) chessBoard.getComponent(8 * (r - 1) + C);
+            panel6.removeAll();
+            panel6.revalidate();
+            panel6.repaint();
+            board[r - 1][C] = null;
+          }
+        }
+      }
+
+    } // CODE FOR EN PASSANT
+
+    if (true) {
+      if (board[r][C].name.equals("wPawn") && r == 0) { // if white pawn hits last row, change to queen
+        JLabel piece5 = new JLabel(new ImageIcon("bKnight.png"));
+        JPanel panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
+        board[r][C] = null;
+        panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
+        panel5.removeAll();
+        panel5.revalidate();
+        panel5.repaint();
+        piece5 = new JLabel(new ImageIcon("ChessRec/wQueen.png"));
+        panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
+        panel5.add(piece5);
+        board[r][C] = new Queen(r, C, "white");
+      }
+
+      // check for black pawn promotion
+      if (board[r][C].name.equals("bPawn") && r == 7) {
+        JLabel piece5 = new JLabel(new ImageIcon("wKnight.png"));
+        JPanel panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
+        board[r][C] = null;
+        panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
+        panel5.removeAll();
+        panel5.revalidate();
+        panel5.repaint();
+        piece5 = new JLabel(new ImageIcon("ChessRec/bQueen.png"));
+        panel5 = (JPanel) chessBoard.getComponent(8 * r + C);
+        panel5.add(piece5);
+        board[r][C] = new Queen(r, C, "black");
+      }
+    } // CODE FOR PAWN PROMOTION
+
+    if (true) {
+      // check for castling requirement
+      if (board[r][C].name.equals("wRook")) {
+        board[r][C].moved = true; // signify that rook has moved, cant castle now
+      }
+      if ((board[r][C].name.equals("wKing")) && board[r][C].moved == false) { // if king moved, and hasnt moved
+        // until now
+        if (r == 7 && C == 6) {
+          board[r][C].moved = true;
+          board[r][C].castle = true;
+
+          JLabel piece2 = new JLabel(new ImageIcon("bKnight.png")); // just template
+          JPanel panel2 = (JPanel) chessBoard.getComponent(0);
+          board[7][5] = null;
+          piece2 = new JLabel(new ImageIcon("ChessRec/wRook.png"));
+          panel2 = (JPanel) chessBoard.getComponent(61);
+          panel2.add(piece2);
+
+          panel2 = (JPanel) chessBoard.getComponent(63);
+          panel2.removeAll();
+          panel2.revalidate();
+          panel2.repaint();
+
+          board[7][5] = board[7][7];
+          board[7][5].row = 7;
+          board[7][5].col = 5;
+          board[7][7] = null;
+        }
+
+        else if (r == 7 && C == 2) {
+          board[r][C].moved = true;
+          board[r][C].castle = true;
+
+          JLabel piece2 = new JLabel(new ImageIcon("bKnight.png"));
+          JPanel panel2 = (JPanel) chessBoard.getComponent(0);
+          board[7][3] = null;
+          piece2 = new JLabel(new ImageIcon("ChessRec/wRook.png"));
+          panel2 = (JPanel) chessBoard.getComponent(59);
+          panel2.add(piece2);
+
+          panel2 = (JPanel) chessBoard.getComponent(56);
+          panel2.removeAll();
+          panel2.revalidate();
+          panel2.repaint();
+
+          board[7][3] = board[7][0];
+          board[7][3].row = 7;
+          board[7][3].col = 3;
+          board[7][0] = null;
+        } else {
+          board[r][C].moved = true;
+        }
+
+      }
+
+      if (board[r][C].name.equals("bRook")) {
+        board[r][C].moved = true;
+      }
+      if ((board[r][C].name.equals("bKing")) && board[r][C].moved == false) { // if king moved, and hasnt moved
+        // until now
+        if (r == 0 && C == 6) {
+          board[r][C].moved = true;
+          board[r][C].castle = true;
+
+          JLabel piece2 = new JLabel(new ImageIcon("bKnight.png"));
+          JPanel panel2 = (JPanel) chessBoard.getComponent(0);
+          board[0][5] = null;
+          piece2 = new JLabel(new ImageIcon("ChessRec/bRook.png"));
+          panel2 = (JPanel) chessBoard.getComponent(5);
+          panel2.add(piece2);
+
+          panel2 = (JPanel) chessBoard.getComponent(7);
+          panel2.removeAll();
+          panel2.revalidate();
+          panel2.repaint();
+
+          board[0][5] = board[0][7];
+          board[0][5].row = 0;
+          board[0][5].col = 5;
+          board[0][7] = null;
+        }
+
+        else if (r == 0 && C == 2) {
+          board[r][C].moved = true;
+          board[r][C].castle = true;
+
+          JLabel piece2 = new JLabel(new ImageIcon("bKnight.png"));
+          JPanel panel2 = (JPanel) chessBoard.getComponent(0);
+          board[0][3] = null;
+          piece2 = new JLabel(new ImageIcon("ChessRec/bRook.png"));
+          panel2 = (JPanel) chessBoard.getComponent(3);
+          panel2.add(piece2);
+
+          panel2 = (JPanel) chessBoard.getComponent(0);
+          panel2.removeAll();
+          panel2.revalidate();
+          panel2.repaint();
+
+          board[0][3] = board[0][0];
+          board[0][3].row = 0;
+          board[0][3].col = 0;
+          board[0][0] = null;
+        } else {
+          board[r][C].moved = true;
+        }
+
+      }
+
+    } // CODE FOR CASTLING
+
+
+    for (int j = 0; j < 8; j++) { // reset colors again
+      for (int i = 0; i < 8; i++) {
+        JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
+        if (i % 2 == j % 2) {
+          reset.setBackground(Color.blue);
+        } else {
+          reset.setBackground(Color.white);
+        }
+      }
+    } // RESET BOARD
+
+  }
+
 
   public void mouseClicked(MouseEvent e) {
 
   }
 
   public void mouseMoved(MouseEvent e) {
-
+    if(playernum == 0) {
+      blackMove(board);
+    }
   }
 
   public void mouseEntered(MouseEvent e) {
@@ -1011,3 +1280,5 @@ class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener
   }
 
 }
+
+

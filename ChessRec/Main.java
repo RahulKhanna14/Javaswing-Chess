@@ -1,5 +1,7 @@
-//The infrastructure (bare chessboard, function headers for MouseListener, essentially JavaSwing-specific code) was taken from https://forgetcode.com/Java/848-Chess-game-Swing; the core code of how the pieces actual move, gameplay, etc. is all original
+package ChessRec;//The infrastructure (bare chessboard, function headers for MouseListener, essentially JavaSwing-specific code) was taken from https://forgetcode.com/Java/848-Chess-game-Swing; the core code of how the pieces actual move, gameplay, etc. is all original
 
+
+import ChessRec.ChessGameDemo;
 
 import java.awt.*;
 import java.awt.event.*;
