@@ -9,7 +9,7 @@ public class Pawn extends Piece{
     this.passant = p;
     this.moved = m;
     this.name = color.charAt(0) + "Pawn";
-    this.value = 20;
+    this.value = 15;
   }
   public ArrayList<Move> getMoves(Piece[][]board){
     ArrayList<Move> moves = new ArrayList<Move>();

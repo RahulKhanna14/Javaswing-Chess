@@ -14,6 +14,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   JLayeredPane layeredPane;
   JPanel chessBoard;
   JLabel chessPiece;
+  JTextArea whiteMoves = new JTextArea();
   int xAdjustment;
   int yAdjustment;
   int pieceR = 0;
@@ -24,6 +25,11 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   boolean gameOver = false;
   boolean answered = false;
   int difficulty = 3;
+  int moveCounter = 0;
+  int finalMoveCounter = 0;
+
+  int clickRow = 0;
+  int clickCol = 0;
 
   Piece[][] board;
   Piece WhiteKing;
@@ -36,6 +42,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   ArrayList<Move> movelist3;
   ArrayList<Move> masterlist;
   ArrayList<Move> allmovelist;
+  ArrayList<String> allPerfMoves = new ArrayList<String>();
+  ArrayList<String> boardHash = new ArrayList<String>();
 
   public ChessGameDemo() {
     //final int[] difficulty = {3};
@@ -46,15 +54,18 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     frame2.setLocationRelativeTo( null );
     Color lightgrey = new Color(241, 243, 244);
     JPanel buttons = new JPanel();
-    buttons.setLayout(new GridLayout(3,1));
+    buttons.setLayout(new GridLayout(4,1));
     JButton easy = new JButton("Very Easy");
-    JButton medium = new JButton("Medium");
-    JButton tough = new JButton("Tough");
+    JButton medium = new JButton("Normal");
+    JButton tough = new JButton("Intermediate");
+    JButton hard = new JButton("Tough");
     buttons.add(easy);
     buttons.add(medium);
     buttons.add(tough);
+    buttons.add(hard);
     frame2.add(BorderLayout.CENTER, buttons);
     frame2.setVisible(true);
+
 
     easy.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e){
@@ -78,7 +89,16 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     tough.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e){
         difficulty = 3;
-        System.out.println("Difficulty set to tough.\n The AI analyzes 3+ moves deep.\n");
+        System.out.println("Difficulty set to intermediate.\n The AI analyzes 3 moves deep. Please allow for ~5-15 seconds between moves. \n");
+        frame2.setVisible(false);
+        answered = true;
+        frame2.dispose();
+      }
+    });
+    hard.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        difficulty = 4;
+        System.out.println("Difficulty set to tough.\n The AI analyzes 4 moves deep. Please allow for ~10-30 seconds between moves. \n");
         frame2.setVisible(false);
         answered = true;
         frame2.dispose();
@@ -94,6 +114,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     allmovelist = new ArrayList<Move>();
     blackmoves = new ArrayList<Move>();
     Dimension boardSize = new Dimension(600, 600);
+    Dimension windowSize = new Dimension(600, 600);
     // 2D array
     board = new Piece[8][8];
     for (int j = 0; j < 8; j++) { // initialize board with backend pieces; store values to be accessed later
@@ -127,9 +148,14 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     BlackKing = board[0][4];
 
     // Layered Pane gives depth, allows to add items on top of chessboard
+    JPanel wholeFrame = new JPanel();
+
+    wholeFrame.setLayout(new BorderLayout());
+
     layeredPane = new JLayeredPane();
-    getContentPane().add(layeredPane);
-    layeredPane.setPreferredSize(boardSize);
+    getContentPane().add(wholeFrame);
+    wholeFrame.add(layeredPane, BorderLayout.CENTER);
+    layeredPane.setPreferredSize(windowSize);
     layeredPane.addMouseListener(this);
     layeredPane.addMouseMotionListener(this);
 
@@ -141,6 +167,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     chessBoard.setPreferredSize(boardSize);
     chessBoard.setBounds(0, 0, boardSize.width, boardSize.height);
 
+
     for (int i = 0; i < 64; i++) {
       JPanel square = new JPanel(new BorderLayout());
       chessBoard.add(square);
@@ -151,6 +178,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       else
         square.setBackground(i % 2 == 0 ? Color.white : Color.blue);
     } // if (i % 2) ? (if true make white) else (if false make blue)
+
 
     // placeholder to create piece and panel
     JLabel piece = new JLabel(new ImageIcon("bKnight.png"));
@@ -168,6 +196,127 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
       }
     }
+    /**
+    JFrame frame3 = new JFrame("Move List");
+    frame3.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+    frame3.setSize(300,600);
+    frame3.setLocation(frame2.getX() + 450, frame2.getY()-200);
+    JPanel moveList = new JPanel();
+    moveList.setLayout(new GridLayout(2,1));
+    JTextField whiteMoves = new JTextField(1);
+    whiteMoves.setText("white moves go here");
+    whiteMoves.setEditable(true);
+
+    JTextField blackMoves = new JTextField(1);
+    blackMoves.setText("black moves go here");
+    blackMoves.setEditable(false);
+
+
+    moveList.add(whiteMoves);
+    moveList.add(blackMoves);
+
+    frame3.add(BorderLayout.CENTER, moveList);
+    frame3.setVisible(true);
+    **/
+    JPanel TextmoveList = new JPanel(new BorderLayout());
+    JPanel emptyLeft = new JPanel(new BorderLayout());
+    JPanel emptyRight = new JPanel(new BorderLayout());
+    JPanel emptyTop = new JPanel(new BorderLayout());
+    emptyLeft.setPreferredSize(new Dimension(70, 400));
+    emptyRight.setPreferredSize(new Dimension(70, 400));
+    emptyTop.setPreferredSize(new Dimension(300, 80));
+    emptyLeft.setVisible(true);
+    emptyRight.setVisible(true);
+    emptyTop.setVisible(true);
+    TextmoveList.setBackground(Color.white);
+    TextmoveList.setPreferredSize(new Dimension(300,600));
+
+    JPanel buttonRegion = new JPanel(new BorderLayout());
+    buttonRegion.setPreferredSize(new Dimension(300, 200));
+    JPanel moveButtons = new JPanel(new GridLayout(1, 3));
+    moveButtons.setPreferredSize(new Dimension(280, 200));
+    JButton goBack = new JButton("<<");
+    JButton goForward = new JButton(">>");
+
+
+
+    JPanel blank1 = new JPanel();
+    blank1.setVisible(true);
+
+    moveButtons.add(goBack);
+    moveButtons.add(blank1);
+    moveButtons.add(goForward);
+
+    buttonRegion.add(moveButtons, BorderLayout.CENTER);
+    JPanel emptyLeft2 = new JPanel();
+    JPanel emptyRight2 = new JPanel();
+    JPanel emptyBot2 = new JPanel();
+    JPanel emptyTop2 = new JPanel();
+    emptyLeft2.setPreferredSize(new Dimension(70, 40));
+    emptyRight2.setPreferredSize(new Dimension(70, 40));
+    emptyBot2.setPreferredSize(new Dimension(300, 60));
+    emptyTop2.setPreferredSize(new Dimension(300, 60));
+    emptyLeft2.setVisible(true);
+    emptyRight2.setVisible(true);
+    emptyBot2.setVisible(true);
+    emptyTop2.setVisible(true);
+
+    buttonRegion.add(emptyLeft2, BorderLayout.LINE_START);
+    buttonRegion.add(emptyRight2, BorderLayout.LINE_END);
+    buttonRegion.add(emptyBot2, BorderLayout.PAGE_END);
+    buttonRegion.add(emptyTop2, BorderLayout.PAGE_START);
+
+    whiteMoves.setRows(23);
+    whiteMoves.setColumns(13);
+    whiteMoves.setLineWrap(true);
+    whiteMoves.setBackground(Color.lightGray);
+    whiteMoves.setVisible(true);
+    JScrollPane scroll = new JScrollPane (whiteMoves);
+    scroll.createVerticalScrollBar();
+    scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
+
+    TextmoveList.add(scroll, BorderLayout.CENTER);
+    TextmoveList.add(buttonRegion, BorderLayout.PAGE_END);
+
+    TextmoveList.add(emptyLeft, BorderLayout.LINE_START);
+    TextmoveList.add(emptyRight, BorderLayout.LINE_END);
+    TextmoveList.add(emptyTop, BorderLayout.PAGE_START);
+    whiteMoves.setText("Move List\n\n");
+    whiteMoves.setEditable(false);
+    //TextmoveList.add(whiteMoves);
+
+    wholeFrame.add(TextmoveList, BorderLayout.LINE_END);
+
+    goBack.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        //do the gobackmove
+        if(moveCounter > 0) {
+          reverseMove(allPerfMoves.get(2*moveCounter - 1));
+          reverseMove(allPerfMoves.get(2*moveCounter-2));
+          System.out.println("\n You went backwards 1 move. \n");
+          moveCounter--;
+        }
+      }
+                             });
+
+
+    goForward.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        //do the goforwardmove
+        if(moveCounter < finalMoveCounter) {
+          System.out.println("\n You went forwards 1 move. \n");
+          performMove(allPerfMoves.get(2*moveCounter));
+          performMove(allPerfMoves.get(2*moveCounter + 1));
+          moveCounter++;
+
+        }
+      }
+    });
+
+
+
+
     masterlist = blackgetAllMoves(board); // initializes masterlist before proceeding
     System.out.println("It is white's turn. ");
   }
@@ -215,16 +364,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     chessPiece = null;
     Component c = chessBoard.findComponentAt(e.getX(), e.getY());
 
-    for (int j = 0; j < 8; j++) { // reset the colors of board, double for loop
-      for (int i = 0; i < 8; i++) {
-        JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
-        if (i % 2 == j % 2) {
-          reset.setBackground(Color.blue);
-        } else {
-          reset.setBackground(Color.white);
-        }
-      }
-    }
+
     if (c instanceof JPanel)
       return;
 
@@ -243,6 +383,10 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
     if (board[Ycomp / 75][Xcomp / 75] != null) { // if player clicks on valid piece, get all moves and then check if
                                                  // right color
+      if(board[Ycomp / 75][Xcomp / 75].color == "white"){
+        clickRow = Ycomp / 75;
+        clickCol = Xcomp / 75;
+      }
 
       movelist = board[Ycomp / 75][Xcomp / 75].getMoves(board);
 
@@ -336,6 +480,18 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
 
       // With move list now finalized, mark valid moves with green color
+      if(movelist != null && board[Ycomp / 75][Xcomp / 75].color != "black") {
+        for (int j = 0; j < 8; j++) { // reset the colors of board, double for loop
+          for (int i = 0; i < 8; i++) {
+            JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
+            if (i % 2 == j % 2) {
+              reset.setBackground(Color.blue);
+            } else {
+              reset.setBackground(Color.white);
+            }
+          }
+        }
+      }
       pieceR = Ycomp / 75;
       pieceC = Xcomp / 75;
       if (movelist != null) {
@@ -396,6 +552,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
   // functions to evaluate whether white/black are in check
   public boolean checkwhiteking(Piece[][] b) {
+    masterlist = blackgetAllMoves(board);
     for (int k = 0; k < masterlist.size(); k++) {
       int possr = masterlist.get(k).r;
       int possc = masterlist.get(k).c;
@@ -412,6 +569,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   }
 
   public boolean checkblackking(Piece[][] b) {
+    masterlist = whitegetAllMoves(board);
     for (int k = 0; k < masterlist.size(); k++) {
       int possr = masterlist.get(k).r;
       int possc = masterlist.get(k).c;
@@ -515,20 +673,22 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       int tempcol = superlist.get(i).c;
       int oldrow = superlist.get(i).piecemove.row; // Old positionr
       int oldcol = superlist.get(i).piecemove.col; // Old positionc
-      Piece original = b[temprow][tempcol];
-      b[temprow][tempcol] = b[oldrow][oldcol];
-      b[temprow][tempcol].row = temprow;
-      b[temprow][tempcol].col = tempcol;
-      b[oldrow][oldcol] = null;
-      masterlist = whitegetAllMoves(board);
-      if (checkblackking(board) == true) {
-        superlist.remove(superlist.get(i));
-        i -= 1;
+      if(b[oldrow][oldcol] != null) {
+        Piece original = b[temprow][tempcol];
+        b[temprow][tempcol] = b[oldrow][oldcol];
+        b[temprow][tempcol].row = temprow;
+        b[temprow][tempcol].col = tempcol;
+        b[oldrow][oldcol] = null;
+        masterlist = whitegetAllMoves(board);
+        if (checkblackking(board) == true) {
+          superlist.remove(superlist.get(i));
+          i -= 1;
+        }
+        b[oldrow][oldcol] = b[temprow][tempcol];
+        b[oldrow][oldcol].row = oldrow;
+        b[oldrow][oldcol].col = oldcol;
+        b[temprow][tempcol] = original;
       }
-      b[oldrow][oldcol] = b[temprow][tempcol];
-      b[oldrow][oldcol].row = oldrow;
-      b[oldrow][oldcol].col = oldcol;
-      b[temprow][tempcol] = original;
     }
     return superlist;
 
@@ -685,18 +845,18 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       int[] pawntable = {
       0, 0, 0, 0, 0, 0, 0, 0,
               5, 10, 10, -20, -20, 10, 10, 5,
-              5, -5, -10, 0, 0, -10, -5, 5,
+              5, 5, -10, -5, -5, -10, 5, 5,
               0, 0, 0, 20, 20, 0, 0, 0,
               5, 5, 10, 25, 25, 10, 5, 5,
               10, 10, 20, 30, 30, 20, 10, 10,
               50, 50, 50, 50, 50, 50, 50, 50,
-              0, 0, 0, 0, 0, 0, 0, 0};
+              100, 100, 100, 100, 100, 100, 100, 100};
 
       if(p.name.contains("bPawn")){
         return pawntable[8*row + col];
       }
       else{
-        return pawntable[8*(7-row)+col];
+        return pawntable[8*(7-row)+col] * 0.8;
       }
     }
     else{
@@ -710,23 +870,30 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         if (b[i][j] != null && b[i][j].color == "white") {
-          total -= ((2 * b[i][j].value) + (posMultiplier2(i, j, b[i][j])));
+          total -= ((8 * b[i][j].value) + (posMultiplier2(i, j, b[i][j])));
         } else if (b[i][j] != null && b[i][j].color == "black") {
-          total += (2 * b[i][j].value) + (posMultiplier2(i, j, b[i][j]));
+          total += (8 * b[i][j].value) + (posMultiplier2(i, j, b[i][j]));
         }
       }
     }
+
     if (checkwhiteking(board)) {
       total += 10;
     }
     if (checkblackking(board)){
       total -= 10;
     }
-    if (WhiteGetSafeMoves(board).size() == 0){
+    if (WhiteGetSafeMoves(board).size() == 0 && checkwhiteking(board)){
       total = 500000;
     }
-    if (BlackGetSafeMoves(board).size() == 0){
+    if (WhiteGetSafeMoves(board).size() == 0 && !checkwhiteking(board)){
+      total = 0;
+    }
+    if (BlackGetSafeMoves(board).size() == 0 && checkblackking(board)){
       total = -500000;
+    }
+    if (BlackGetSafeMoves(board).size() == 0 && !checkblackking(board)){
+      total = 0;
     }
     return total;
   }
@@ -764,9 +931,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++) {
             if (b[i][j] != null && b[i][j].color == "white") {
-              total -= ((b[i][j].value) + (posMultiplier2(i, j, b[i][j])));
+              total -= ((8 * b[i][j].value) + (posMultiplier2(i, j, b[i][j])));
             } else if (b[i][j] != null && b[i][j].color == "black") {
-              total += (b[i][j].value) + (posMultiplier2(i, j, b[i][j]));
+              total += (8 * b[i][j].value) + (posMultiplier2(i, j, b[i][j]));
             }
           }
         }
@@ -789,60 +956,65 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
     }
 
-  public double[] evaluatePosition2(Piece[][] b, ArrayList<Move> mlist, int depth, double alpha, double beta) { //if depth odd, maximizing player
+  public double[] evaluatePosition2(Piece[][] b, ArrayList<Move> mlist, int depth, double alpha, double beta, boolean isWhite) { //if depth odd, maximizing player
     double optimalVal;
     double val;
     int optimalIndex = 0; //the best move
-    if(depth == 0){
+    if((difficulty < 4 && depth == 0) || (difficulty == 4 && depth == 1)){
       double n = evalBoard(b);
       return (new double[]{n, 0});
     }
-    if(depth % 2 == 1){
+    if(!isWhite){
       optimalVal = -10000;
     }
     else{
       optimalVal = 10000;
     }
     for(int i = 0; i < mlist.size(); i++){
+      if(depth == 5){
+        System.out.println("Another one done");
+      }
       Move m = mlist.get(i);
       int newrow = m.r;
       int newcol = m.c;
       int oldrow = m.piecemove.row;
       int oldcol = m.piecemove.col;
-      Piece original = b[newrow][newcol];
-      b[newrow][newcol] = b[oldrow][oldcol];
-      b[newrow][newcol].row = newrow;
-      b[newrow][newcol].col = newcol;
-      b[oldrow][oldcol] = null;
-      if(depth % 2 == 1) {
-        ArrayList<Move> whiteSpace = WhiteGetSafeMoves(b);
-        val = evaluatePosition2(b, whiteSpace, depth-1, alpha, beta)[0];
+      if(b[oldrow][oldcol] != null) {
+        Piece original = b[newrow][newcol];
+        b[newrow][newcol] = b[oldrow][oldcol];
+        b[newrow][newcol].row = newrow;
+        b[newrow][newcol].col = newcol;
+        b[oldrow][oldcol] = null;
+        if (!isWhite) {
+          ArrayList<Move> whiteSpace = WhiteGetSafeMoves(b);
+          val = evaluatePosition2(b, whiteSpace, depth - 1, alpha, beta, true)[0];
+        } else {
+          ArrayList<Move> blackSpace = BlackGetSafeMoves(b);
+          val = evaluatePosition2(b, blackSpace, depth - 1, alpha, beta, false)[0];
+        }
+
+        if (!isWhite) { //if looking at white
+          if (val > optimalVal) {
+            optimalVal = val;
+            optimalIndex = i;
+          }
+          alpha = Math.max(alpha, val);
+        } else {
+          if (val < optimalVal) {
+            optimalVal = val;
+            optimalIndex = i;
+          }
+          beta = Math.min(beta, val);
+        }
+        b[oldrow][oldcol] = b[newrow][newcol];
+        b[oldrow][oldcol].row = oldrow;
+        b[oldrow][oldcol].col = oldcol;
+        b[newrow][newcol] = original;
+        if (beta <= alpha) {
+          break;
+        }
       }
       else{
-        ArrayList<Move> blackSpace = BlackGetSafeMoves(b);
-        val = evaluatePosition2(b, blackSpace, depth - 1, alpha, beta)[0];
-      }
-
-      if(depth % 2 == 1){ //if looking at white
-        if(val > optimalVal){
-          optimalVal = val;
-          optimalIndex = i;
-        }
-        alpha = Math.max(alpha, val);
-      }
-
-      else{
-        if(val < optimalVal){
-          optimalVal = val;
-          optimalIndex = i;
-        }
-        beta = Math.min(beta, val);
-      }
-      b[oldrow][oldcol] = b[newrow][newcol];
-      b[oldrow][oldcol].row = oldrow;
-      b[oldrow][oldcol].col = oldcol;
-      b[newrow][newcol] = original;
-      if(beta <= alpha){
         break;
       }
     }
@@ -892,6 +1064,12 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         int possrow = movelist.get(a).r;
         int posscol = movelist.get(a).c;
         if (r == possrow && C == posscol) {
+          boolean captured1 = false;
+          String captName = "";
+          if(board[r][C] != null){
+            captured1 = true;
+            captName = board[r][C].name;
+          }
           board[r][C] = null;
           works = true;
           if (c instanceof JLabel) {
@@ -905,19 +1083,52 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
             parent.add(chessPiece);
           }
           chessPiece.setVisible(true);
+          String tempName = pieceR + "," + pieceC + ";" + r + "," + C + board[pieceR][pieceC].name;
+          if(captured1 == true){
+            tempName += ("X" + captName);
+          }
 
+          if(BlackGetSafeMoves(board).size() < 1 && checkblackking(board)){
+            tempName += "#";
+          }
+          else if(checkblackking(board)){
+            tempName += "+";
+          }
+
+          if(moveCounter < finalMoveCounter){
+            while((2*moveCounter) < allPerfMoves.size()){
+              allPerfMoves.remove(2*moveCounter);
+
+            }
+            while((2*moveCounter) < boardHash.size()){
+              boardHash.remove(2*moveCounter);
+
+            }
+            finalMoveCounter = moveCounter;
+            whiteMoves.append("\n---New Branch---\n");
+          }
+
+          allPerfMoves.add(tempName);
           board[r][C] = board[pieceR][pieceC];
           board[r][C].row = r;
           board[r][C].col = C;
           board[pieceR][pieceC] = null;
+          updateBoardHash(board);
         }
       }
+
+
+
+
         if(works == false){
           JPanel goback = (JPanel) chessBoard.getComponent(pieceR * 8 + pieceC);
       chessPiece.setVisible(true);
       goback.add(chessPiece);
           return;
         }
+
+
+
       }
 
       checkSpecials(board, r, C);
@@ -1022,7 +1233,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           }
           
         }
-    
+
     if(movelist != null){
       try {
         Robot bum = new Robot();
@@ -1045,27 +1256,91 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
   public void blackMove(Piece[][] b){
     movelist = BlackGetSafeMoves(board);
-    //int rand = (int) (Math.random() * movelist.size());
     int maxIndex = 0;
     double maxValue = -500;
-    int rand = 0;
-
-    if(difficulty == 1){ //Easy level; just choose random
-      rand = (int) (Math.random() * movelist.size());
-    }
-    else if(difficulty == 2){ //Medium level; goes two layers deep
-      for (int t = 0; t < movelist.size(); t++){
-        double curr = evaluatePosition(board, movelist.get(t), 1);
-        if(curr > maxValue){
-          maxValue = curr;
-          maxIndex = t;
+    int rand = 1;
+    if(finalMoveCounter < 2) { //make openings more varied
+      ArrayList<Move> opening = new ArrayList<Move>();
+      for (int g = 0; g < movelist.size(); g++) {
+        if(movelist.get(g).piecemove.row == 1 && (movelist.get(g).piecemove.col == 3 || movelist.get(g).piecemove.col == 4 )){
+          opening.add(movelist.get(g));
+        }
+        else if((movelist.get(g).piecemove.name.contains("Knight")) && (movelist.get(g).c == 2 || movelist.get(g).c == 5)){
+          opening.add(movelist.get(g));
         }
       }
-      rand = maxIndex;
+
+      int rand1 = (int) (Math.random() * opening.size());
+      for (int d = 0; d < movelist.size(); d++) {
+        if(movelist.get(d).equals(opening.get(rand1))){
+          rand = d;
+        }
+      }
     }
-    else{ //Tough level; goes three moves deep + alpha/beta pruning
-      Collections.shuffle(movelist);
-      rand = (int) evaluatePosition2(board, movelist, 3, -50000, 50000)[1];
+    else {
+
+      if (difficulty == 1) { //Easy level; just choose random
+        rand = (int) (Math.random() * movelist.size());
+
+        /**for(int m = 0; m < movelist.size(); m++){
+          if(movelist.get(m).piecemove.name.contains("Knight")){
+            if(movelist.get(m).r <= 2 && movelist.get(m).c >= 6){
+              rand = m;
+            }
+          } //THIS HELPS CHECK FOR REPETITION YO
+        }
+         **/
+      }
+      else if (difficulty == 2) { //Medium level; goes two layers deep
+        for (int t = 0; t < movelist.size(); t++) {
+          double curr = evaluatePosition(board, movelist.get(t), 1);
+          if (curr > maxValue) {
+            maxValue = curr;
+            maxIndex = t;
+          }
+        }
+        rand = maxIndex;
+      }
+      else if (difficulty == 3){ //Intermediate level; goes three moves deep + alpha/beta pruning
+        Collections.shuffle(movelist);
+        rand = (int) evaluatePosition2(board, movelist, 3, -50000, 50000, false)[1];
+      }
+
+      else {
+        difficulty = 3;
+        //Collections.shuffle(movelist);
+        ArrayList<Move> temp = movelist;
+        ArrayList<Move> supreme = new ArrayList<Move>();
+        for(int i = 0; i < Math.min(temp.size(), 6); i++){
+          double maxValues = 0;
+          int maxIndex2 = 0;
+          maxIndex2 = (int) evaluatePosition2(board, movelist, 2, -500000, 500000, false)[1];
+
+          supreme.add(temp.get(maxIndex2));
+
+          temp.remove(maxIndex2);
+        }
+        difficulty = 4;
+        int layerhigh = (int) evaluatePosition2(board, supreme, 5, -50000, 50000, false)[1];
+        difficulty = 3;
+        movelist = BlackGetSafeMoves(board);
+        for(int k = 0; k < movelist.size(); k++){
+
+          if(movelist.get(k).piecemove.name.equals(supreme.get(layerhigh).piecemove.name)){
+
+            if(movelist.get(k).r == supreme.get(layerhigh).r && movelist.get(k).c == supreme.get(layerhigh).c){
+
+              rand = k;
+            }
+          }
+        }
+        difficulty = 4;
+
+
+
+
+        //
+      }
     }
 
     //once move is obtained, easy to implement
@@ -1075,7 +1350,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     int C = movelist.get(rand).c;
     JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
     JPanel panel7 = (JPanel) chessBoard.getComponent(0);
-    board[r][C] = null;
+
     piece7 = new JLabel(new ImageIcon("ChessRec/" + board[pieceR][pieceC].name+".png"));
     panel7 = (JPanel) chessBoard.getComponent(8*r+C);
     panel7.removeAll();
@@ -1086,12 +1361,36 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     panel7.removeAll();
     panel7.revalidate();
     panel7.repaint();
+
+    String temp2 = pieceR + "," + pieceC + ";" + r + "," + C + board[pieceR][pieceC].name;
+    if(board[r][C] != null){
+      temp2 += ("X" + board[r][C].name);
+    }
+    board[r][C] = null;
+
     board[r][C] = board[pieceR][pieceC];
     board[r][C].row = r;
     board[r][C].col = C;
     board[pieceR][pieceC] = null;
 
     checkSpecials(board, r, C);
+
+    if(WhiteGetSafeMoves(board).size() < 1 && checkwhiteking(board)){
+      temp2 += "#";
+    }
+    else if(checkwhiteking(board)){
+
+      temp2 += "+";
+    }
+    //start move 0; do white then black, then move 1
+    //we go back from move 15 to move 5; must delete moves 6->15 so array values 12->30
+
+
+
+    allPerfMoves.add(temp2);
+    updateMoveList(allPerfMoves.get(allPerfMoves.size()-2), allPerfMoves.get(allPerfMoves.size()-1), finalMoveCounter);
+    updateBoardHash(board);
+
 
     int compOrig = (pieceR * 8) + pieceC;
     int compNew = (r * 8) + C;
@@ -1100,17 +1399,19 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     template5.setBackground(Color.orange);
     template6.setBackground(Color.orange.darker());
 
-
     boolean checkk = false; // r we in check?
     boolean limit = false; // r there no moves left?
     playernum = 1;
     System.out.println("\n---------------\n");
     System.out.println("It is now white's turn.");
+    moveCounter++;
+    finalMoveCounter++;
     allmovelist = WhiteGetSafeMoves(board);
     if (allmovelist.size() < 1) {
       limit = true;
     }
     masterlist = blackgetAllMoves(board);
+
     if (checkwhiteking(board) == true) {
       checkk = true;
       for (int i = 0; i < 8; i++) { // set parameter
@@ -1147,6 +1448,420 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       colorKing(board, "w", "gray");
       gameOver = true;
     }
+
+    if(checkBoardHash()){
+      System.out.println("\n---Stalemate; it's a draw by 3-move repetition!");
+      colorKing(board, "b", "gray");
+      colorKing(board, "w", "gray");
+      gameOver = true;
+    }
+
+    for (int g = 0; g < allPerfMoves.size(); g++){
+      //System.out.print(allPerfMoves.get(g) + " | ");
+      //System.out.println(boardHash.get(g));
+    }
+
+
+
+  }
+
+  public void performMove(String s){
+    //7,2;3,6wBishopXbPawn
+    int pieceR = Character.getNumericValue(s.charAt(0));
+    String name = "";
+    String capturedName = "";
+    int pieceC = Character.getNumericValue(s.charAt(2));
+    int newR = Character.getNumericValue(s.charAt(4));
+    int newC = Character.getNumericValue(s.charAt(6));
+    if(s.contains("X")){
+      int k = s.indexOf("X");
+      name = s.substring(7, k);
+      capturedName = s.substring(k);
+    }
+    else {
+      name = s.substring(7);
+    }
+    JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
+    JPanel panel7 = (JPanel) chessBoard.getComponent(0);
+    piece7 = new JLabel(new ImageIcon("ChessRec/" + board[pieceR][pieceC].name+".png"));
+    panel7 = (JPanel) chessBoard.getComponent(8*newR+newC);
+    panel7.removeAll();
+    panel7.revalidate();
+    panel7.repaint();
+    panel7.add(piece7);
+    panel7 = (JPanel) chessBoard.getComponent(8*pieceR + pieceC);
+    panel7.removeAll();
+    panel7.revalidate();
+    panel7.repaint();
+
+    board[newR][newC] = null;
+
+    board[newR][newC] = board[pieceR][pieceC];
+    board[newR][newC].row =newR;
+    board[newR][newC].col = newC;
+    board[pieceR][pieceC] = null;
+
+    checkSpecials(board, newR, newC);
+
+    if (board[newR][newC].color == "white") { // if white's turn
+      boolean checkk = false; // In Check?
+      boolean limit = false; // Are there available moves?
+      allmovelist = BlackGetSafeMoves(board);
+      if (allmovelist.size() < 1) {
+        limit = true;
+      }
+      masterlist = whitegetAllMoves(board);
+      if (checkblackking(board) == true) {
+        checkk = true;
+        for (int i = 0; i < 8; i++) { // set parameter
+          for (int j = 0; j < 8; j++) {
+            if (board[i][j] != null) {
+              if (board[i][j].name.equals("bKing")) {
+                board[i][j].attack = true; // king being attacked, cant castle
+              }
+            }
+          }
+        }
+      } else {
+        for (int i = 0; i < 8; i++) { // set parameter
+          for (int j = 0; j < 8; j++) {
+            if (board[i][j] != null) {
+              if (board[i][j].name.equals("bKing")) {
+                board[i][j].attack = false; // king not being attacked
+              }
+            }
+          }
+        }
+      }
+      if (checkk == true && limit == true) { // no moves, in check
+        System.out.println("\n---White Wins by checkmate!---");
+        colorKing(board, "b", "red");
+        playernum = 5;
+        gameOver = true;
+      } else if (checkk == true && limit == false) { // moves, in check
+        System.out.println("\n---Black is in check!---");
+        colorKing(board, "b", "yellow");
+      } else if (checkk == false && limit == true) {
+        System.out.println("\n---Stalemate; it's a draw!");
+        colorKing(board, "b", "gray");
+        colorKing(board, "w", "gray");
+        gameOver = true;
+      }
+    }
+
+    else {
+      /**
+      boolean checkk = false; // r we in check?
+      boolean limit = false; // r there no moves left?
+      playernum = 1;
+      allmovelist = WhiteGetSafeMoves(board);
+      if (allmovelist.size() < 1) {
+        limit = true;
+      }
+      masterlist = blackgetAllMoves(board);
+      if (checkwhiteking(board) == true) {
+        checkk = true;
+        for (int i = 0; i < 8; i++) { // set parameter
+          for (int j = 0; j < 8; j++) {
+            if (board[i][j] != null) {
+              if (board[i][j].name.equals("wKing")) {
+                board[i][j].attack = true;
+              }
+            }
+          }
+        }
+      } else {
+        for (int i = 0; i < 8; i++) { // set parameter
+          for (int j = 0; j < 8; j++) {
+            if (board[i][j] != null) {
+              if (board[i][j].name.equals("wKing")) {
+                board[i][j].attack = false;
+              }
+            }
+          }
+        }
+      }
+
+      if (checkk == true && limit == true) { // no moves, in check
+        System.out.println("\n---Black Wins by checkmate!---");
+        colorKing(board, "w", "red");
+        playernum = 5;
+        gameOver = true;
+      } else if (checkk == true && limit == false) { // moves, in check
+        System.out.println("\n---White is in check!---");
+        colorKing(board, "w", "yellow");
+      } else if (checkk == false && limit == true) {
+        System.out.println("\n---Stalemate; it's a draw!");
+        colorKing(board, "b", "gray");
+        colorKing(board, "w", "gray");
+        gameOver = true;
+      }
+      **/
+    }
+    int compOrig = (pieceR * 8) + pieceC;
+    int compNew = (newR * 8) + newC;
+    JPanel template5 = (JPanel) chessBoard.getComponent(compOrig);
+    JPanel template6 = (JPanel) chessBoard.getComponent(compNew);
+    template5.setBackground(Color.orange);
+    template6.setBackground(Color.orange.darker());
+
+
+    /**
+    if(true){
+    try {
+      Robot bum = new Robot();
+      Point p = MouseInfo.getPointerInfo().getLocation();
+      bum.mouseMove(p.x+10,p.y);
+    } catch (AWTException awtException) {
+      awtException.printStackTrace();
+    }
+
+  } **/
+
+
+
+  }
+
+  public void reverseMove(String s){
+
+    String temp = "";
+    String name = "";
+    int pieceR;
+    int pieceC;
+    int newR;
+    int newC;
+    String capturedName = "";
+    if(s.contains("X")){
+      int index = s.indexOf("X");
+      name = s.substring(7, index);
+      capturedName = s.substring(index+1);
+      pieceR = Character.getNumericValue(s.charAt(0));
+      pieceC = Character.getNumericValue(s.charAt(2));
+      newR = Character.getNumericValue(s.charAt(4));
+      newC = Character.getNumericValue(s.charAt(6));
+      temp = newR + "," + newC + ";" + pieceR + "," + pieceC + name;
+      performMove(temp);
+      JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
+      JPanel panel7 = (JPanel) chessBoard.getComponent(0);
+      piece7 = new JLabel(new ImageIcon("ChessRec/" + capturedName+".png"));
+      panel7 = (JPanel) chessBoard.getComponent(8*newR+newC);
+      panel7.removeAll();
+      panel7.revalidate();
+      panel7.repaint();
+      panel7.add(piece7);
+      String color = "";
+      if(capturedName.charAt(0) == 'w'){
+        color = "white";
+      }
+      else{
+        color = "black";
+      }
+      if(capturedName.contains("Pawn")){
+        board[newR][newC] = new Pawn(newR, newC, color, false, false);
+      }
+      if(capturedName.contains("Knight")){
+        board[newR][newC] = new Knight(newR, newC, color);
+      }
+      if(capturedName.contains("Bishop")){
+        board[newR][newC] = new Bishop(newR, newC, color);
+      }
+      if(capturedName.contains("Rook")){
+        board[newR][newC] = new Rook(newR, newC, color, false);
+      }
+      if(capturedName.contains("Queen")){
+        board[newR][newC] = new Queen(newR, newC, color);
+      }
+      board[newR][newC].row = newR;
+      board[newR][newC].col = newC;
+
+    }
+    else{
+      name = s.substring(7);
+      pieceR = Character.getNumericValue(s.charAt(0));
+      pieceC = Character.getNumericValue(s.charAt(2));
+      newR = Character.getNumericValue(s.charAt(4));
+      newC = Character.getNumericValue(s.charAt(6));
+      temp = newR + "," + newC + ";" + pieceR + "," + pieceC + name;
+      performMove(temp);
+    }
+    //check for castling
+    if(board[pieceR][pieceC].name.contains("King")){
+      if(pieceC - newC == -2){
+        String castleMove = pieceR + ",5;" + pieceR + ",7" + board[pieceR][pieceC+1].name;
+        performMove(castleMove);
+        board[pieceR][pieceC].moved = false;
+        board[pieceR][pieceC].passant = false;
+        board[pieceR][7].moved = false;
+      }
+      if(newC - pieceC == -2){
+        String castleMove = pieceR + ",3;" + pieceR + ",0" + board[pieceR][pieceC-1].name;
+        performMove(castleMove);
+        board[pieceR][pieceC].moved = false;
+        board[pieceR][pieceC].passant = false;
+        board[pieceR][0].moved = false;
+      }
+    }
+    //check for en passant
+    if(board[pieceR][pieceC].name.contains("Pawn")) {
+      if (Math.abs(pieceC - newC) == 1 && Math.abs(pieceR - newR) == 1) {
+        if (!(s.contains("X"))) {
+
+          if (board[pieceR][pieceC].color.equals("white")) {
+            board[newR + 1][newC] = new Pawn(newR + 1, newC, "black", true, false);
+            board[newR + 1][newC].row = newR + 1;
+            board[newR + 1][newC].col = newC;
+            JLabel piece10;
+            JPanel panel10;
+            piece10 = new JLabel(new ImageIcon("ChessRec/bPawn.png"));
+            panel10 = (JPanel) chessBoard.getComponent(8*(newR+1)+newC);
+            panel10.removeAll();
+            panel10.revalidate();
+            panel10.repaint();
+            panel10.add(piece10);
+
+
+          } else {
+            board[newR - 1][newC] = new Pawn(newR - 1, newC, "white", true, false);
+            board[newR - 1][newC].row = newR - 1;
+            board[newR - 1][newC].col = newC;
+            JLabel piece10;
+            JPanel panel10;
+            piece10 = new JLabel(new ImageIcon("ChessRec/wPawn.png"));
+            panel10 = (JPanel) chessBoard.getComponent(8*(newR-1)+newC);
+            panel10.removeAll();
+            panel10.revalidate();
+            panel10.repaint();
+            panel10.add(piece10);
+          }
+        }
+      }
+    }
+    //check for pawn promotion / DE-motion
+    if(s.contains("Pawn") && board[pieceR][pieceC].name.contains("Queen")){
+
+      String pawnColor = board[pieceR][pieceC].color;
+      String named = pawnColor;
+      if(s.contains("w")){
+        named = "wPawn";
+      }
+      else{
+        named = "bPawn";
+      }
+      JLabel piece10;
+      JPanel panel10;
+      piece10 = new JLabel(new ImageIcon("ChessRec/" + named+".png"));
+      panel10 = (JPanel) chessBoard.getComponent(8*pieceR+pieceC);
+      panel10.removeAll();
+      panel10.revalidate();
+      panel10.repaint();
+      panel10.add(piece10);
+      board[pieceR][pieceC] = new Pawn(pieceR, pieceC, pawnColor, false, true);
+      board[pieceR][pieceC].row = pieceR;
+      board[pieceR][pieceC].col = pieceC;
+
+    }
+    int compNew = (pieceR * 8) + pieceC;
+    int compOrig = (newR * 8) + newC;
+    JPanel template5 = (JPanel) chessBoard.getComponent(compOrig);
+    JPanel template6 = (JPanel) chessBoard.getComponent(compNew);
+    template5.setBackground(Color.orange);
+    template6.setBackground(Color.orange.darker());
+
+
+  }
+
+
+  public void updateMoveList(String whiteInput, String blackInput, int n){
+    String result = "";
+    String alphabet = "abcdefgh";
+    n++;
+    result += (n + ". ");
+
+    char d = whiteInput.charAt(8);
+    if(d == 'K' && whiteInput.charAt(9) == 'n'){
+      d = 'N';
+    }
+    if(d != 'P') {
+      result += d;
+    }
+
+    if(d == 'N'){
+      result += alphabet.charAt(Character.getNumericValue(whiteInput.charAt(2)));
+    }
+    if(d == 'P' && whiteInput.contains("X")){
+      result += alphabet.charAt(Character.getNumericValue(whiteInput.charAt(2)));
+    }
+    if(whiteInput.contains("X")){
+      result += "x";
+    }
+    result += alphabet.charAt(Character.getNumericValue(whiteInput.charAt(6)));
+    int val = Character.getNumericValue(whiteInput.charAt(4));
+    result += Integer.toString(8-val);
+
+    if(whiteInput.contains("#")){
+      result += "#";
+    }
+    if(whiteInput.contains("+")){
+      result += "+";
+    }
+    if(whiteInput.contains("King")){
+      if(whiteInput.charAt(2) == '4' && whiteInput.charAt(6) == '6'){
+        result = (n + ". ");
+        result += "O-O";
+      }
+      if(whiteInput.charAt(2) == '4' && whiteInput.charAt(6) == '2'){
+        result = (n + ". ");
+        result += "O-O-O";
+      }
+    }
+
+    String result2 = "";
+
+    char e = blackInput.charAt(8);
+    if(e == 'K'&& blackInput.charAt(9) == 'n'){
+      e = 'N';
+    }
+    if(e != 'P') {
+      result2 += e;
+    }
+
+
+    if(e == 'N'){
+      result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(2)));
+    }
+    if(e == 'P' && blackInput.contains("X")){
+      result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(2)));
+    }
+    if(blackInput.contains("X")){
+      result2 += "x";
+    }
+    result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(6)));
+    int val2 = Character.getNumericValue(blackInput.charAt(4));
+    result2 += Integer.toString(8-val2);
+
+    if(blackInput.contains("#")){
+      result2 += "#";
+    }
+    if(blackInput.contains("+")){
+      result2 += "+";
+    }
+    if(blackInput.contains("King")){
+      if(blackInput.charAt(2) == '4' && blackInput.charAt(6) == '6'){
+        result2 = "O-O";
+      }
+      if(blackInput.charAt(2) == '4' && blackInput.charAt(6) == '2'){
+        result2 = "O-O-O";
+      }
+    }
+
+    //now repeat for black
+
+    int lengthy = result.length();
+    whiteMoves.append(result);
+    for(int i = 0; i < (16 - lengthy); i++){
+      whiteMoves.append(" ");
+    }
+    whiteMoves.append(result2 + "\n");
 
 
 
@@ -1379,13 +2094,196 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
   }
 
-
-  public void mouseClicked(MouseEvent e) {
-
+  public void updateBoardHash(Piece[][] b){
+    String key = "";
+    for(int i = 0; i < 8; i++){
+      for(int j = 0; j < 8; j++){
+        if(b[i][j] != null) {
+          key += b[i][j].name.charAt(0);
+          if (b[i][j].name.contains("Knight")) {
+            key += "N";
+          } else {
+            key += b[i][j].name.charAt(1);
+          }
+        }
+        else{
+          key += "yy"; //empty
+        }
+      }
+    }
+    boardHash.add(key);
   }
 
+  public boolean checkBoardHash(){
+    ArrayList<String> kam = new ArrayList<String>();
+    Collections.sort(kam);
+    int dupl = 0;
+    for(int i = 1; i < kam.size(); i++){
+      if(kam.get(i).equals(kam.get(i-1))){
+        dupl++;
+      }
+      else{
+        dupl = 0;
+      }
+      if(dupl == 3){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public void mouseClicked(MouseEvent e) {
+    if(playernum == 1) {
+      Component d = chessBoard.findComponentAt(e.getX(), e.getY());
+      int newx = 0;
+      int newy = 0;
+      if (!(d instanceof JPanel)) {
+        Point parentLocation2 = d.getParent().getLocation(); // set piece to mouse location, use xAdjustment and yAdjustment
+        // to adjust for variation from center
+
+        newx = parentLocation2.y / 75;
+        newy = parentLocation2.x / 75;
+        if (board[newx][newy].color != "black") {
+          return;
+        }
+        int compnum2 = (newx * 8) + newy;
+        JPanel template3 = (JPanel) chessBoard.getComponent(compnum2);
+        if ((template3.getBackground() == Color.white || template3.getBackground() == Color.blue)) {
+          return;
+        }
+      }
+      if (d instanceof JPanel) {
+        if ((d.getBackground() == Color.white || d.getBackground() == Color.blue)) {
+          return;
+        }
+        Point parentLocation2 = d.getLocation(); // set piece to mouse location, use xAdjustment and yAdjustment
+        // to adjust for variation from center
+        newy = parentLocation2.x / 75;
+        newx = parentLocation2.y / 75;
+      }
+
+
+
+      boolean captured2 = false;
+      String captName2 = "";
+      if (board[newx][newy] != null) {
+        captured2 = true;
+        captName2 = board[newx][newy].name;
+      }
+      board[newx][newy] = null;
+      String tempName2 = clickRow + "," + clickCol + ";" + newx + "," + newy + board[clickRow][clickCol].name;
+      if (captured2 == true) {
+        tempName2 += ("X" + captName2);
+      }
+
+      if (BlackGetSafeMoves(board).size() < 1 && checkblackking(board)) {
+        tempName2 += "#";
+      }
+      else if (checkblackking(board)) {
+        tempName2 += "+";
+      }
+      if(moveCounter < finalMoveCounter){
+        while((2*moveCounter) < allPerfMoves.size()){
+          allPerfMoves.remove(2*moveCounter);
+
+        }
+        while((2*moveCounter) < allPerfMoves.size()){
+          boardHash.remove(2*moveCounter);
+
+        }
+        finalMoveCounter = moveCounter;
+        whiteMoves.append("\n---New Branch---\n");
+      }
+      allPerfMoves.add(tempName2);
+
+
+      JLabel piece9 = new JLabel(new ImageIcon("bKnight.png"));
+      JPanel panel9 = (JPanel) chessBoard.getComponent(0);
+      board[newx][newy] = null;
+      piece9 = new JLabel(new ImageIcon("ChessRec/" + board[clickRow][clickCol].name + ".png"));
+      panel9 = (JPanel) chessBoard.getComponent(8 * newx + newy);
+      panel9.removeAll();
+      panel9.revalidate();
+      panel9.repaint();
+      panel9.add(piece9);
+      panel9 = (JPanel) chessBoard.getComponent(8 * clickRow + clickCol);
+      panel9.removeAll();
+      panel9.revalidate();
+      panel9.repaint();
+      board[newx][newy] = board[clickRow][clickCol];
+      board[newx][newy].row = newx;
+      board[newx][newy].col = newy;
+      board[clickRow][clickCol] = null;
+      updateBoardHash(board);
+      checkSpecials(board, newx, newy);
+
+      if (playernum == 1) { // if white's turn
+        boolean checkk = false; // In Check?
+        boolean limit = false; // Are there available moves?
+        playernum = 0;
+        System.out.println("\n---------------\n");
+        System.out.println("It is now black's turn.");
+        allmovelist = BlackGetSafeMoves(board);
+        if (allmovelist.size() < 1) {
+          limit = true;
+        }
+        masterlist = whitegetAllMoves(board);
+        if (checkblackking(board) == true) {
+          checkk = true;
+          for (int i = 0; i < 8; i++) { // set parameter
+            for (int j = 0; j < 8; j++) {
+              if (board[i][j] != null) {
+                if (board[i][j].name.equals("bKing")) {
+                  board[i][j].attack = true; // king being attacked, cant castle
+                }
+              }
+            }
+          }
+        } else {
+          for (int i = 0; i < 8; i++) { // set parameter
+            for (int j = 0; j < 8; j++) {
+              if (board[i][j] != null) {
+                if (board[i][j].name.equals("bKing")) {
+                  board[i][j].attack = false; // king not being attacked
+                }
+              }
+            }
+          }
+        }
+        if (checkk == true && limit == true) { // no moves, in check
+          System.out.println("\n---White Wins by checkmate!---");
+          colorKing(board, "b", "red");
+          playernum = 5;
+          gameOver = true;
+        } else if (checkk == true && limit == false) { // moves, in check
+          System.out.println("\n---Black is in check!---");
+          colorKing(board, "b", "yellow");
+        } else if (checkk == false && limit == true) {
+          System.out.println("\n---Stalemate; it's a draw!");
+          colorKing(board, "b", "gray");
+          colorKing(board, "w", "gray");
+          gameOver = true;
+        }
+      }
+
+
+      if (true) {
+        try {
+          Robot bum = new Robot();
+          Point p = MouseInfo.getPointerInfo().getLocation();
+          bum.mouseMove(p.x + 10, p.y);
+        } catch (AWTException awtException) {
+          awtException.printStackTrace();
+        }
+      }
+
+
+    }
+
+}
+
   public void mouseMoved(MouseEvent e) {
-    if(playernum == 0) {
+    if(playernum == 0 && gameOver == false) {
       blackMove(board);
     }
   }

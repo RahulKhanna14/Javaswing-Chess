@@ -14,7 +14,7 @@ class Main{
   JFrame frame = new ChessGameDemo();
   frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
   frame.pack();
-  frame.setResizable(true);
+  frame.setResizable(false);
   frame.setLocationRelativeTo( null );
   frame.setVisible(true);
  }
