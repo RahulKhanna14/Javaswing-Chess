@@ -5,8 +5,16 @@ import ChessRec.Piece;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Executors;
 import javax.swing.*;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
 
 //while gameover is false
 public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionListener {
@@ -15,6 +23,10 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   JPanel chessBoard;
   JLabel chessPiece;
   JTextArea whiteMoves = new JTextArea();
+  JProgressBar progress = new JProgressBar();
+  JLabel whiteTimer = new JLabel("10:00", SwingConstants.CENTER);
+  JLabel blackTimer = new JLabel("10:00", SwingConstants.CENTER);
+  SwingWorker<Integer, Void> swingWorker;
   int xAdjustment;
   int yAdjustment;
   int pieceR = 0;
@@ -22,11 +34,41 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   int playernum = 1;
   int kingrow = 0;
   int kingcol = 0;
+  int blackPieces = 16;
+  int whitePieces = 16;
   boolean gameOver = false;
   boolean answered = false;
   int difficulty = 3;
   int moveCounter = 0;
+  Timer TimerW;
+  Timer TimerB;
+  final SwingProgressBar it = new SwingProgressBar();
+  int currValue = 0;
+  boolean done = false;
   int finalMoveCounter = 0;
+  long FuncStartTime;
+
+
+  int secLeftW = 10;
+  int secLeftB = 600;
+  int timeLeftw = 60;
+  int timeLeftb = 600;
+  int timePassed = 0;
+  boolean nowSafe = false;
+  int finalMoveNum = 0;
+  String request = "";
+
+  int sliderDifficulty = 600;
+  Color primaryCol = Color.blue;
+  int minChosen = 10;
+  int secChosen = 0;
+  boolean toggled = true;
+  Color tempCol = Color.blue;
+  JComboBox customList;
+
+  JButton goBack;
+  JButton goForward;
+
 
   int clickRow = 0;
   int clickCol = 0;
@@ -44,6 +86,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   ArrayList<Move> allmovelist;
   ArrayList<String> allPerfMoves = new ArrayList<String>();
   ArrayList<String> boardHash = new ArrayList<String>();
+  ArrayList<String> ultraHash = new ArrayList<String>();
+  ArrayList<Double> ultraVal = new ArrayList<Double>();
 
   public ChessGameDemo() {
     //final int[] difficulty = {3};
@@ -64,7 +108,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     buttons.add(tough);
     buttons.add(hard);
     frame2.add(BorderLayout.CENTER, buttons);
-    frame2.setVisible(true);
+    //frame2.setVisible(true);
 
 
     easy.addActionListener(new ActionListener(){
@@ -72,6 +116,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         difficulty = 1;
         System.out.println("Difficulty set to easy.\n The AI selects randomly.\n");
         answered = true;
+        timeLeftb = 60;
+        blackTimer.setText("1:00");
         frame2.setVisible(false);
         frame2.dispose();
 
@@ -80,6 +126,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     medium.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e){
         difficulty = 2;
+        timeLeftb = 60;
+        blackTimer.setText("1:00");
         System.out.println("Difficulty set to medium.\n The AI analyzes 2 moves deep.\n");
         frame2.setVisible(false);
         answered = true;
@@ -89,6 +137,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     tough.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e){
         difficulty = 3;
+        timeLeftb = 450;
+        blackTimer.setText("7:30");
         System.out.println("Difficulty set to intermediate.\n The AI analyzes 3 moves deep. Please allow for ~5-15 seconds between moves. \n");
         frame2.setVisible(false);
         answered = true;
@@ -98,6 +148,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     hard.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e){
         difficulty = 4;
+        timeLeftb = 750;
+        blackTimer.setText("12:30");
         System.out.println("Difficulty set to tough.\n The AI analyzes 4 moves deep. Please allow for ~10-30 seconds between moves. \n");
         frame2.setVisible(false);
         answered = true;
@@ -174,9 +226,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
       int row = (i / 8) % 2;
       if (row == 0)
-        square.setBackground(i % 2 == 0 ? Color.blue : Color.white);
+        square.setBackground(i % 2 == 0 ? primaryCol : Color.white);
       else
-        square.setBackground(i % 2 == 0 ? Color.white : Color.blue);
+        square.setBackground(i % 2 == 0 ? Color.white : primaryCol);
     } // if (i % 2) ? (if true make white) else (if false make blue)
 
 
@@ -222,29 +274,38 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     JPanel emptyLeft = new JPanel(new BorderLayout());
     JPanel emptyRight = new JPanel(new BorderLayout());
     JPanel emptyTop = new JPanel(new BorderLayout());
-    emptyLeft.setPreferredSize(new Dimension(70, 400));
-    emptyRight.setPreferredSize(new Dimension(70, 400));
-    emptyTop.setPreferredSize(new Dimension(300, 80));
+    emptyLeft.setPreferredSize(new Dimension(20, 400));
+    emptyRight.setPreferredSize(new Dimension(20, 400));
+    emptyTop.setPreferredSize(new Dimension(300, 40));
     emptyLeft.setVisible(true);
     emptyRight.setVisible(true);
     emptyTop.setVisible(true);
     TextmoveList.setBackground(Color.white);
     TextmoveList.setPreferredSize(new Dimension(300,600));
+    whiteMoves.setFont(whiteMoves.getFont().deriveFont(20f));
 
     JPanel buttonRegion = new JPanel(new BorderLayout());
-    buttonRegion.setPreferredSize(new Dimension(300, 200));
+    buttonRegion.setPreferredSize(new Dimension(300, 100));
     JPanel moveButtons = new JPanel(new GridLayout(1, 3));
-    moveButtons.setPreferredSize(new Dimension(280, 200));
-    JButton goBack = new JButton("<<");
-    JButton goForward = new JButton(">>");
+    moveButtons.setPreferredSize(new Dimension(280, 100));
+    goBack = new JButton("<<");
+    goForward = new JButton(">>");
 
 
 
     JPanel blank1 = new JPanel();
     blank1.setVisible(true);
-
+    JPanel blank2 = new JPanel();
+    blank2.setVisible(true);
+    JPanel blank3 = new JPanel();
+    blank3.setVisible(true);
+    JPanel blank4 = new JPanel();
+    blank4.setVisible(true);
+    //moveButtons.add(blank1);
+    //moveButtons.add(blank2);
+    //moveButtons.add(blank3);
     moveButtons.add(goBack);
-    moveButtons.add(blank1);
+    moveButtons.add(blank4);
     moveButtons.add(goForward);
 
     buttonRegion.add(moveButtons, BorderLayout.CENTER);
@@ -252,10 +313,10 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     JPanel emptyRight2 = new JPanel();
     JPanel emptyBot2 = new JPanel();
     JPanel emptyTop2 = new JPanel();
-    emptyLeft2.setPreferredSize(new Dimension(70, 40));
-    emptyRight2.setPreferredSize(new Dimension(70, 40));
-    emptyBot2.setPreferredSize(new Dimension(300, 60));
-    emptyTop2.setPreferredSize(new Dimension(300, 60));
+    emptyLeft2.setPreferredSize(new Dimension(10, 20));
+    emptyRight2.setPreferredSize(new Dimension(10, 20));
+    emptyBot2.setPreferredSize(new Dimension(300, 20));
+    emptyTop2.setPreferredSize(new Dimension(300, 40));
     emptyLeft2.setVisible(true);
     emptyRight2.setVisible(true);
     emptyBot2.setVisible(true);
@@ -288,12 +349,152 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
     wholeFrame.add(TextmoveList, BorderLayout.LINE_END);
 
+    //Put numbers and letters along the rows and columns
+    JPanel lowerArea = new JPanel(new BorderLayout());
+    JPanel rowOfLetters = new JPanel(new GridLayout(1, 8));
+    rowOfLetters.setPreferredSize(new Dimension(600, 20));
+    String alph = "abcdefgh";
+    for(int i = 0; i < 8; i++){
+      JLabel letter = new JLabel("e", SwingConstants.CENTER);
+      letter.setText(String.valueOf(alph.charAt(i)));
+      letter.setVisible(true);
+      rowOfLetters.add(letter);
+    }
+    rowOfLetters.setVisible(true);
+    lowerArea.setPreferredSize(new Dimension(600, 20));
+    JPanel emptyRight3 = new JPanel();
+    emptyRight3.setPreferredSize(new Dimension(300, 20));
+    JPanel emptyLeft3 = new JPanel();
+    emptyLeft3.setPreferredSize(new Dimension(325, 20));
+    lowerArea.add(rowOfLetters, BorderLayout.CENTER);
+    lowerArea.add(emptyRight3, BorderLayout.LINE_END);
+    lowerArea.add(emptyLeft3, BorderLayout.LINE_START);
+
+    wholeFrame.add(lowerArea, BorderLayout.PAGE_END);
+
+    //
+
+    JPanel leftArea = new JPanel(new BorderLayout());
+    leftArea.setPreferredSize(new Dimension(325, 600));
+
+    JPanel colOfNum = new JPanel(new GridLayout(8, 1));
+    colOfNum.setPreferredSize(new Dimension(60, 600));
+    for(int i = 0; i < 8; i++){
+      JLabel letter = new JLabel("e", SwingConstants.RIGHT);
+      letter.setText(Integer.toString(9-(i+1)) + "  ");
+      letter.setVisible(true);
+      colOfNum.add(letter);
+    }
+    colOfNum.setVisible(true);
+
+    whiteTimer.setFont(new Font("Serif", Font.PLAIN, 40));
+    whiteTimer.setBorder(BorderFactory.createLineBorder(Color.black, 3));
+    whiteTimer.setBackground(Color.white);
+    whiteTimer.setOpaque(true);
+    blackTimer.setOpaque(true);
+    blackTimer.setBorder(BorderFactory.createLineBorder(Color.black, 3));
+    blackTimer.setBackground(Color.white);
+    blackTimer.setFont(new Font("Serif", Font.PLAIN, 45));
+
+    whiteTimer.setVisible(true);
+    blackTimer.setVisible(true);
+
+    JPanel timerBox = new JPanel(new GridLayout(5, 1));
+    timerBox.setPreferredSize(new Dimension(120, 400));
+
+    JPanel empty10 = new JPanel();
+    JPanel empty11 = new JPanel();
+    JPanel empty12 = new JPanel();
+    JPanel empty13 = new JPanel();
+    empty10.setVisible(true);
+    empty11.setVisible(true);
+    empty12.setVisible(true);
+    empty13.setVisible(true);
+    timerBox.add(empty10);
+    timerBox.add(blackTimer);
+    //timerBox.add(empty11);
+    timerBox.add(empty12);
+    timerBox.add(whiteTimer);
+    //timerBox.add(empty13);
+    leftArea.add(timerBox, BorderLayout.CENTER);
+
+    JPanel emptyLeft5 = new JPanel();
+    emptyLeft5.setVisible(true);
+    emptyLeft5.setPreferredSize(new Dimension(20, 600));
+    JPanel emptyBot3 = new JPanel();
+    emptyBot3.setVisible(true);
+    emptyBot3.setPreferredSize(new Dimension(275, 40));
+
+
+
+
+
+
+    leftArea.add(colOfNum, BorderLayout.LINE_END);
+    leftArea.add(emptyLeft5, BorderLayout.LINE_START);
+    //leftArea.add(emptyBot3, BorderLayout.PAGE_END);
+    wholeFrame.add(leftArea, BorderLayout.LINE_START);
+
+
+    TimerW = new Timer(1000, new ActionListener(){
+      @Override
+
+      public void actionPerformed(ActionEvent e)
+      {
+        if(gameOver){
+          return;
+        }
+        timePassed += 1;
+        int currMin = (timeLeftw-timePassed) / 60;
+        int currSec = (timeLeftw - timePassed) % 60;
+        String nah = "";
+        if(currSec < 10){
+          nah = "0" + currSec;
+        }
+        else{
+          nah = String.valueOf(currSec);
+        }
+        String res = currMin + ":" + nah;
+        SimpleDateFormat df=new SimpleDateFormat("mm:ss");
+        whiteTimer.setText(res);
+
+        if(timeLeftw - timePassed < 0) {
+          colorKing(board, "w", "red");
+          System.out.println("Black wins on time!");
+          timeLeftw -= timePassed;
+          gameOver = true;
+          TimerW.stop();
+          endGame("Black", true, false);
+        }
+      }
+    });
+
+    TimerB = new Timer(1000, new ActionListener(){
+      @Override
+
+      public void actionPerformed(ActionEvent e)
+      {
+        timeLeftb -= 1000;
+        SimpleDateFormat df=new SimpleDateFormat("mm:ss:S");
+        whiteTimer.setText(df.format(timeLeftw));
+      }
+    });
+
+
+
+
+
+
+
+
+
     goBack.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e){
         //do the gobackmove
-        if(moveCounter > 0) {
-          reverseMove(allPerfMoves.get(2*moveCounter - 1));
-          reverseMove(allPerfMoves.get(2*moveCounter-2));
+        if(moveCounter > 0 && toggled) {
+            reverseMove(allPerfMoves.get(2 * moveCounter - 1));
+            reverseMove(allPerfMoves.get(2 * moveCounter - 2));
+
           System.out.println("\n You went backwards 1 move. \n");
           moveCounter--;
         }
@@ -304,12 +505,11 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     goForward.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e){
         //do the goforwardmove
-        if(moveCounter < finalMoveCounter) {
+        if(moveCounter < finalMoveCounter && toggled) {
           System.out.println("\n You went forwards 1 move. \n");
-          performMove(allPerfMoves.get(2*moveCounter));
-          performMove(allPerfMoves.get(2*moveCounter + 1));
+            performMove(allPerfMoves.get(2 * moveCounter));
+            performMove(allPerfMoves.get(2 * moveCounter + 1));
           moveCounter++;
-
         }
       }
     });
@@ -319,7 +519,463 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
     masterlist = blackgetAllMoves(board); // initializes masterlist before proceeding
     System.out.println("It is white's turn. ");
+
+    JPanel upperRegion = new JPanel(new BorderLayout());
+    upperRegion.setPreferredSize(new Dimension(900, 20));
+    //wholeFrame.add(upperRegion, BorderLayout.PAGE_START);
+    JButton settings = new JButton("Settings");
+    settings.setBackground(Color.lightGray);
+    //settings.setBorder(BorderFactory.createLineBorder(Color.blue, 1));
+    settings.setVisible(true);
+
+    settings.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        createSettings();
+      }
+    });
+    TextmoveList.add(settings, BorderLayout.PAGE_START);
+    createSettings();
+
   }
+
+  public void createSettings(){
+    JFrame frame6 = new JFrame("Settings");
+    frame6.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    frame6.setSize(600, 500);
+    frame6.setAlwaysOnTop(true);
+    frame6.setLocationRelativeTo( null );
+    frame6.setLayout(new BorderLayout());
+    frame6.setVisible(true);
+
+    //frame has been created above, now to add the different components
+    JPanel settingsLayout = new JPanel(new GridLayout(13, 1));
+    settingsLayout.setPreferredSize(new Dimension(600, 500));
+
+    JSlider difficultySlider = new JSlider(JSlider.HORIZONTAL, 100, 950, sliderDifficulty);
+    difficultySlider.setMajorTickSpacing(100);
+    difficultySlider.setMinorTickSpacing(50);
+    //Create the slider
+    difficultySlider.setPaintTicks(true);
+
+//Create the label table
+    Hashtable labelTable = new Hashtable();
+    labelTable.put( new Integer( 125 ), new JLabel("Easy") );
+    labelTable.put( new Integer( 400 ), new JLabel("Normal") );
+    labelTable.put( new Integer( 657 ), new JLabel("Intermediate") );
+    labelTable.put( new Integer( 900 ), new JLabel("Tough") );
+    difficultySlider.setLabelTable( labelTable );
+    difficultySlider.setPaintLabels(true);
+
+    JLabel difficultyLabel = new JLabel("  Select Difficulty: ");
+    difficultyLabel.setFont(new Font("Serif", Font.BOLD, 16));
+    JPanel difficultyTab = new JPanel(new BorderLayout());
+    difficultyTab.add(difficultySlider, BorderLayout.CENTER);
+    difficultyTab.add(difficultyLabel, BorderLayout.LINE_START);
+    settingsLayout.add(difficultyTab);
+
+    //difficulty done
+
+    JLabel colorLabel = new JLabel("  Primary Board Color:               ");
+    colorLabel.setFont(new Font("Serif", Font.BOLD, 16));
+
+    JPanel colorTab = new JPanel(new BorderLayout());
+
+    JButton chooseColor = new JButton("Choose Color");
+    chooseColor.setOpaque(true);
+    chooseColor.setBorderPainted(false);
+    chooseColor.setBackground(primaryCol);
+    chooseColor.setPreferredSize(new Dimension(60, 30));
+    JPanel emptyRight = new JPanel();
+    emptyRight.setVisible(true);
+    emptyRight.setPreferredSize(new Dimension(125, 20));
+    chooseColor.setVisible(true);
+    colorTab.add(chooseColor, BorderLayout.CENTER);
+    colorTab.add(emptyRight, BorderLayout.LINE_END);
+    chooseColor.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        tempCol = JColorChooser.showDialog(chooseColor, "Make a choice", primaryCol);
+        if (tempCol != null) {
+          chooseColor.setBackground(tempCol);
+        }
+      }
+    });
+
+    colorTab.add(colorLabel, BorderLayout.LINE_START);
+    JPanel empty1 = new JPanel();
+    empty1.setVisible(true);
+
+    settingsLayout.add(empty1);
+    settingsLayout.add(colorTab);
+
+    //color chooser is now done
+
+    JLabel timeLabel = new JLabel(" Time Control (Min/Sec):");
+    timeLabel.setFont(new Font("Serif", Font.BOLD, 16));
+
+    JPanel timeTab = new JPanel(new GridLayout(1, 3));
+    SpinnerNumberModel minuteChoose = new SpinnerNumberModel(minChosen, 0, 30, 1);
+    SpinnerNumberModel secondChoose = new SpinnerNumberModel(secChosen, 0, 59, 5);
+    JSpinner spinner1 = new JSpinner(minuteChoose);
+    spinner1.setPreferredSize(new Dimension(40, 20));
+
+    JSpinner spinner2 = new JSpinner(secondChoose);
+    spinner2.setPreferredSize(new Dimension(40, 20));
+    JPanel emptyRight2 = new JPanel();
+    emptyRight2.setVisible(true);
+    emptyRight2.setPreferredSize(new Dimension(125, 20));
+    timeTab.add(timeLabel);
+    timeTab.add(spinner1);
+    timeTab.add(spinner2);
+
+
+    JPanel empty4 = new JPanel();
+    empty4.setVisible(true);
+
+    settingsLayout.add(empty4);
+    settingsLayout.add(timeTab);
+
+    //time controls all done
+    JPanel togTab = new JPanel(new BorderLayout());
+    JLabel togLabel = new JLabel(" Take-Back Moves:        ");
+    togLabel.setFont(new Font("Serif", Font.BOLD, 16));
+
+    JButton tog = new JButton("Take-back Moves enabled. Press to disable.");
+    tog.setOpaque(true);
+
+    tog.setBorderPainted(false);
+    tog.setBackground(Color.blue);  ;
+    tog.setBorderPainted(false);
+    tog.setBackground(Color.green);
+    JPanel emptyRight4 = new JPanel();
+    emptyRight4.setVisible(true);
+    emptyRight4.setPreferredSize(new Dimension(40, 30));
+    tog.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        if(toggled){
+          tog.setText("Take-back Moves disabled. Press to enable.");
+          goBack.setText("--");
+          goForward.setText("--");
+          toggled = false;
+          tog.setBackground(Color.gray);
+        }
+        else{
+          tog.setText("Take-back Moves enabled. Press to disable.");
+          goBack.setText("<<");
+          goForward.setText(">>");
+          toggled = true;
+          tog.setBackground(Color.green);
+        }
+
+      }
+    });
+    togTab.add(togLabel, BorderLayout.LINE_START);
+    togTab.add(tog, BorderLayout.CENTER);
+    togTab.add(emptyRight4, BorderLayout.LINE_END);
+    JPanel empty6 = new JPanel();
+    empty6.setVisible(true);
+    settingsLayout.add(empty6);
+    settingsLayout.add(togTab);
+
+    //toggle button now completely done above
+
+    JPanel randomTab = new JPanel();
+    GridLayout layout = new GridLayout(1,3);
+    layout.setHgap(30);
+    randomTab.setLayout(layout);
+    //JLabel randomLabel = new JLabel("Take-Back Moves:        ");
+    //togLabel.setFont(new Font("Serif", Font.BOLD, 16));
+
+    JButton random = new JButton("Randomize!");
+    JButton inpRandom = new JButton("Recommend me!");
+    //inpRandom.setBorder(new EmptyBorder(10, 10,10, 10));
+    JPanel rightMost = new JPanel(new BorderLayout());
+    rightMost.setVisible(true);
+    rightMost.add(inpRandom, BorderLayout.CENTER);
+    JPanel emptyi = new JPanel();
+    emptyi.setVisible(true);
+    emptyi.setPreferredSize(new Dimension(30, 20));
+    rightMost.add(emptyi, BorderLayout.LINE_END);
+    tog.setOpaque(true);
+
+    /**
+     random.setBorderPainted(false);
+     random.setBackground(Color.blue);  ;
+     random.setBorderPainted(false);
+     random.setBackground(Color.green);
+     random.setOpaque(true);
+
+     inpRandom.setBorderPainted(false);
+     inpRandom.setBackground(Color.blue);  ;
+     inpRandom.setBorderPainted(false);
+     inpRandom.setBackground(Color.green);
+     **/
+    JPanel emptyRight5 = new JPanel();
+    emptyRight5.setVisible(true);
+    //emptyRight5.setPreferredSize(new Dimension(40, 30));
+    JPanel emptyRight7 = new JPanel();
+    emptyRight7.setVisible(true);
+    //emptyRight7.setPreferredSize(new Dimension(40, 30));
+    JPanel emptyRight8 = new JPanel();
+    emptyRight8.setVisible(true);
+    //emptyRight8.setPreferredSize(new Dimension(40, 30));
+    random.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        int newdiff = (int) (Math.random() * 850 + 100);
+        difficultySlider.setValue(newdiff);
+        Color newCol = new Color((int)(Math.random() * 0x1000000));
+        tempCol = newCol;
+        chooseColor.setBackground(tempCol);
+        int newMin = (int) (Math.random() * 30);
+        int newSec = 5 * (int) (Math.random() * 11);
+        minuteChoose.setValue(newMin);
+        secondChoose.setValue(newSec);
+        if(Math.random() < 0.5) {
+          toggled = true;
+        }
+        else{
+          toggled = false;
+        }
+        settingsLayout.revalidate();
+
+      }
+    });
+    inpRandom.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        JFrame frame9 = new JFrame("Request Game Layout");
+        frame9.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame9.setSize(500, 300);
+        frame9.setAlwaysOnTop(true);
+        frame9.setLocationRelativeTo( null );
+        frame9.setLayout(new BorderLayout());
+        frame9.setVisible(true);
+        frame9.setResizable(false);
+
+        JTextArea userInput = new JTextArea(5, 20);
+        userInput.setFont(new Font("Serif", Font.PLAIN, 12));
+        userInput.setText(request);
+        userInput.setLineWrap(true);
+        userInput.setWrapStyleWord(true);
+        frame9.add(userInput, BorderLayout.CENTER);
+        JTextArea directions = new JTextArea(5, 20);
+        directions.setFont(new Font("Serif", Font.ITALIC, 15));
+        directions.setLineWrap(true);
+        directions.setWrapStyleWord(true);
+        directions.setEditable(false);
+        directions.append("Write a sentence describing the type of game you want today. Be sure to use keywords such as: {easy/medium/hard, slow-paced/classical/fast-paced, standard/custom}. \nIf you do not specify, the game will choose for you.");
+        directions.setBackground(Color.lightGray);
+        frame9.add(directions, BorderLayout.PAGE_START);
+        JButton layoutConfirm = new JButton("Confirm");
+        layoutConfirm.addActionListener(new ActionListener(){
+          public void actionPerformed(ActionEvent e){
+            request = userInput.getText();
+            String toAnalyze = userInput.getText().toLowerCase();
+            String[] ez = {"free", "beginner", "new"};
+            String[] meh = {"easy", "eas", "learn", "bad", "help", "simple", "calm", "relax", "fair", "ok"};
+            String[] inter = {"tough", "experienced", "medium", "average", "moderate", "decent"};
+            String[] expert = {"challeng", "hard", "master", "expert", "master", "pro", "skill", "difficult", "rough", "aggressive", "passive"};
+
+            String[] slow = {"classical", "slow", "peaceful", "no stress", "less"};
+            String[] fast = {"blitz", "rapid", "fast", "quick", "speed", "stress", "rush"};
+            //else do medium
+
+            String[] custom = {"custom", "specialized"};
+            difficultySlider.setValue(450);
+            for(String s : ez){
+              if(toAnalyze.contains(s)){
+                difficultySlider.setValue(150);
+              }
+            }
+            for(String s : meh){
+              if(toAnalyze.contains(s)){
+                difficultySlider.setValue(350);
+              }
+            }
+            for(String s : inter){
+              if(toAnalyze.contains(s)){
+                difficultySlider.setValue(650);
+              }
+            }
+            for(String s : expert){
+              if(toAnalyze.contains(s)){
+                difficultySlider.setValue(900);
+              }
+            }
+            minuteChoose.setValue((int) (Math.random() * 5 + 8));
+            secondChoose.setValue(0);
+            for(String s : slow){
+              if(toAnalyze.contains(s)){
+                minuteChoose.setValue((int) (Math.random() * 10 + 20));
+                secondChoose.setValue(0);
+              }
+            }
+            for(String s : fast){
+              if(toAnalyze.contains(s)){
+                minuteChoose.setValue((int) (Math.random() * 3));
+                secondChoose.setValue((int) (Math.random() * 30 + 25));
+              }
+            }
+            customList.setSelectedIndex(0);
+            for(String s : custom){
+              if(toAnalyze.contains(s)){
+                customList.setSelectedIndex(5);
+              }
+            }
+
+            frame9.setVisible(false);
+            frame9.dispose();
+          }
+        });
+        frame9.add(layoutConfirm, BorderLayout.PAGE_END);
+
+
+
+
+
+
+      }
+    });
+    JLabel randomLabel = new JLabel(" Overall Settings: ");
+    randomLabel.setFont(new Font("Serif", Font.BOLD, 16));
+    randomTab.add(randomLabel);
+    randomTab.add(random);
+    //randomTab.add(emptyRight7);
+    randomTab.add(rightMost);
+    //randomTab.add(emptyRight5);
+    randomTab.setPreferredSize(new Dimension(600, 250));
+    JPanel empty7 = new JPanel();
+    empty7.setVisible(true);
+    settingsLayout.add(empty7);
+    settingsLayout.add(randomTab);
+
+    //random tab / recommendation tab now complete
+
+    JPanel customTab = new JPanel(new BorderLayout());
+    JLabel customLabel = new JLabel(" Choose a custom challenge:        ");
+    customLabel.setFont(new Font("Serif", Font.BOLD, 16));
+
+    String[] challenges = { "Standard", "Play without your Queen", "Play without your central 4 pawns", "Play without your knights/bishops", "Play half-blind (can't see black pieces)", "Random"};
+    customList = new JComboBox(challenges);
+    customList.setSelectedIndex(0);
+
+    JPanel emptyRight9 = new JPanel();
+    emptyRight9.setVisible(true);
+    emptyRight9.setPreferredSize(new Dimension(40, 30));
+
+    customTab.add(customLabel, BorderLayout.LINE_START);
+    customTab.add(customList, BorderLayout.CENTER);
+    customTab.add(emptyRight9, BorderLayout.LINE_END);
+    JPanel empty9 = new JPanel();
+    empty9.setVisible(true);
+    settingsLayout.add(empty9);
+    settingsLayout.add(customTab);
+
+    //custom challenge done above
+
+    JPanel confirmTab = new JPanel(new FlowLayout());
+    togLabel.setFont(new Font("Serif", Font.BOLD, 16));
+
+    JButton confirm = new JButton("Confirm Settings");
+    JButton cancel = new JButton("Cancel all Changes");
+    confirm.setOpaque(true);
+    cancel.setOpaque(true);
+
+    confirm.setBorderPainted(false);
+    cancel.setBorderPainted(false);
+    confirm.setBackground(Color.yellow.brighter());
+    cancel.setBackground(Color.lightGray);
+    JPanel emptyRight11 = new JPanel();
+    emptyRight11.setVisible(true);
+    emptyRight11.setPreferredSize(new Dimension(40, 30));
+    confirm.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e) {
+        sliderDifficulty = difficultySlider.getValue();
+
+        if(sliderDifficulty < 200){
+          difficulty = 1;
+          blackTimer.setText("1:00");
+          timeLeftb = 60;
+        }
+        else if(sliderDifficulty < 500){
+          difficulty = 2;
+          blackTimer.setText("1:00");
+          timeLeftb = 60;
+        }
+        else if (sliderDifficulty < 800){
+          difficulty = 3;
+          blackTimer.setText("7:30");
+          timeLeftb = 450;
+        }
+        else{
+          difficulty = 4;
+          blackTimer.setText("12:30");
+          timeLeftb = 750;
+        }
+
+        minChosen = (int) minuteChoose.getValue();
+        secChosen = (int) secondChoose.getValue();
+        primaryCol = tempCol;
+        for (int j = 0; j < 8; j++) { // reset the colors of board, double for loop
+          for (int i = 0; i < 8; i++) {
+            JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
+            if (i % 2 == j % 2) {
+              reset.setBackground(primaryCol);
+            } else {
+              reset.setBackground(Color.white);
+            }
+          }
+        }
+
+        String bah = "";
+        if(secChosen < 10){
+          bah = "0" + secChosen;
+        }
+        else{
+          bah = String.valueOf(secChosen);
+        }
+        String res = minChosen + ":" + bah;
+        whiteTimer.setText(res);
+        timeLeftw = minChosen * 60 + secChosen;
+
+
+        frame6.setVisible(false);
+        frame6.dispose();
+      }
+    });
+
+    cancel.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        frame6.setVisible(false);
+        frame6.dispose();
+      }
+    });
+    JPanel empty100 = new JPanel();
+    empty100.setVisible(true);
+    JPanel empty101 = new JPanel();
+    empty101.setVisible(true);
+    JPanel empty102 = new JPanel();
+    empty102.setVisible(true);
+    confirmTab.add(empty100);
+    confirmTab.add(confirm);
+    confirmTab.add(empty102);
+    confirmTab.add(cancel);
+    confirmTab.add(empty101);
+    JPanel empty8 = new JPanel();
+    empty8.setVisible(true);
+    settingsLayout.add(empty8);
+    settingsLayout.add(confirmTab);
+
+
+
+
+    frame6.add(settingsLayout, BorderLayout.CENTER);
+    frame6.setBackground(Color.orange);
+    frame6.setVisible(true);
+
+
+  }
+
+
 
   public static void wait(int ms) // function to delay timer by ms seconds
   {
@@ -329,6 +985,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       Thread.currentThread().interrupt();
     }
   }
+
 
   public void colorKing(Piece[][] b, String playerCol, String color) {// Input w or b for white/black, as well as
                                                                       // desired color. Changes king's square to that
@@ -357,8 +1014,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
   public void mousePressed(MouseEvent e) { // the moment player clicks
     if (gameOver == true) {
-      wait(1000);
-      System.exit(0);
+      return;
     }
     masterlist = null;
     chessPiece = null;
@@ -485,7 +1141,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           for (int i = 0; i < 8; i++) {
             JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
             if (i % 2 == j % 2) {
-              reset.setBackground(Color.blue);
+              reset.setBackground(primaryCol);
             } else {
               reset.setBackground(Color.white);
             }
@@ -898,6 +1554,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     return total;
   }
 
+
   public double evaluatePosition(Piece[][] b, Move m, int depth) {
     double min = 99999;
     boolean mate = false;
@@ -913,14 +1570,14 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     b[oldrow][oldcol] = null;
     double total = 0;
 
-    if (depth == 1) {
+    if (depth == 2) {
       ArrayList<Move> whiteSpace = WhiteGetSafeMoves(board);
       if (whiteSpace.size() == 0) { //check for mate
         mate = true;
       }
       if (mate != true) {
         for (int k = 0; k < whiteSpace.size(); k++) {
-          double tempV = evaluatePosition(b, whiteSpace.get(k), 2);
+          double tempV = evaluatePosition(b, whiteSpace.get(k), 1);
           if (tempV < min) {
             min = tempV;
           }
@@ -956,12 +1613,128 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
     }
 
+  public ArrayList<Move> smartSort(Piece[][] b, ArrayList<Move> mlist){
+    ArrayList<Double> values = new ArrayList<Double>(mlist.size());
+    Map<Double, Move> mapie = new Hashtable<Double, Move>();
+
+    Set<Double> keys = mapie.keySet();
+
+    ArrayList<Double> keyCoList = new ArrayList<Double>();
+    for(int k = 0; k < mlist.size(); k++){
+      double evaluation = 0;
+      Move m = mlist.get(k);
+      int newrow = m.r;
+      int newcol = m.c;
+      int oldrow = m.piecemove.row;
+      int oldcol = m.piecemove.col;
+      if(b[oldrow][oldcol] != null) {
+        /**
+        Piece original = b[newrow][newcol];
+        b[newrow][newcol] = b[oldrow][oldcol];
+        b[newrow][newcol].row = newrow;
+        b[newrow][newcol].col = newcol;
+        b[oldrow][oldcol] = null;
+**/
+        evaluation = evaluateMove2(b, m, 2);
+        /**
+        b[oldrow][oldcol] = b[newrow][newcol];
+        b[oldrow][oldcol].row = oldrow;
+        b[oldrow][oldcol].col = oldcol;
+        b[newrow][newcol] = original;
+**/
+        while (keyCoList.contains(evaluation)) {
+          evaluation += 0.01;
+        }
+      }
+      keyCoList.add(evaluation);
+      mapie.put(evaluation, m);
+     // System.out.println("Added " + m + " with a " + evaluation);
+    }
+    Collections.sort(keyCoList, Collections.reverseOrder());
+    for(int k = 0; k < keyCoList.size(); k++){
+      //System.out.println(keyCoList.get(k));
+    }
+    ArrayList<Move> sortedNow = new ArrayList<Move>();
+
+    for(int i = 0; i < mlist.size(); i++){
+      double keyIndex = keyCoList.get(i);
+      sortedNow.add(mapie.get(keyIndex));
+     // System.out.println(mapie.get(keyIndex) + ", w/ " + keyIndex);
+      //mapie.remove(keyIndex, mapie.get(keyIndex));
+      //keyColList.remove(0);
+    }
+    return sortedNow;
+    }
+
+  public double evaluateMove2(Piece[][] b, Move m, int depth) { //if depth odd, maximizing player
+    double optimalVal;
+    if(depth == 0){
+      double n = 0;
+      int newrow = m.r;
+      int newcol = m.c;
+      int oldrow = m.piecemove.row;
+      int oldcol = m.piecemove.col;
+      if(b[oldrow][oldcol] != null) {
+        Piece original = b[newrow][newcol];
+        b[newrow][newcol] = b[oldrow][oldcol];
+        b[newrow][newcol].row = newrow;
+        b[newrow][newcol].col = newcol;
+        b[oldrow][oldcol] = null;
+        n = evalBoard(b);
+        b[oldrow][oldcol] = b[newrow][newcol];
+        b[oldrow][oldcol].row = oldrow;
+        b[oldrow][oldcol].col = oldcol;
+        b[newrow][newcol] = original;
+      }
+      return n;
+    }
+    optimalVal = 100000;
+      int newrow = m.r;
+      int newcol = m.c;
+      int oldrow = m.piecemove.row;
+      int oldcol = m.piecemove.col;
+      if(b[oldrow][oldcol] != null) {
+        Piece original = b[newrow][newcol];
+        b[newrow][newcol] = b[oldrow][oldcol];
+        b[newrow][newcol].row = newrow;
+        b[newrow][newcol].col = newcol;
+        b[oldrow][oldcol] = null;
+        //System.out.println("Newrow, newCol is " + b[newrow][newcol].name);
+        if (true) {
+          ArrayList<Move> whiteSpace = WhiteGetSafeMoves(b);
+          for(int i = 0; i < whiteSpace.size(); i++){
+            double jolly = evaluateMove2(b, whiteSpace.get(i), 0);
+            if(jolly < optimalVal){
+              optimalVal = jolly;
+            }
+          }
+
+        }
+        b[oldrow][oldcol] = b[newrow][newcol];
+        b[oldrow][oldcol].row = oldrow;
+        b[oldrow][oldcol].col = oldcol;
+        b[newrow][newcol] = original;
+      }
+
+    return optimalVal;
+
+  }
+
   public double[] evaluatePosition2(Piece[][] b, ArrayList<Move> mlist, int depth, double alpha, double beta, boolean isWhite) { //if depth odd, maximizing player
+    int counter = 0;
+    int totalSpace = 0;
+    int benchMark = 0;
+    if((difficulty == 3 && depth == 3) || depth == 5){
+      totalSpace = mlist.size();
+      benchMark = totalSpace / 5;
+    }
     double optimalVal;
     double val;
     int optimalIndex = 0; //the best move
     if((difficulty < 4 && depth == 0) || (difficulty == 4 && depth == 1)){
       double n = evalBoard(b);
+      ultraBoardHash(b);
+      ultraVal.add(n);
       return (new double[]{n, 0});
     }
     if(!isWhite){
@@ -970,10 +1743,15 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     else{
       optimalVal = 10000;
     }
+    //ArrayList<Move> mlist = smartSort(b, blist);
     for(int i = 0; i < mlist.size(); i++){
-      if(depth == 5){
-        System.out.println("Another one done");
+      if(difficulty == 4){
+        long elapsed = System.currentTimeMillis() - FuncStartTime;
+        if(elapsed > 30000) {
+          break;
+        }
       }
+
       Move m = mlist.get(i);
       int newrow = m.r;
       int newcol = m.c;
@@ -1016,6 +1794,38 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
       else{
         break;
+      } //do visual stuff
+
+      if(depth > 5){
+        counter++;
+        int tempcount = counter;
+        for(int k = 0; k < tempcount; k++){
+          System.out.print("|*");
+        }
+        for(int h = tempcount; h < 6; h++ ){
+          System.out.print("|-");
+        }
+        System.out.println("|");
+      }
+      if((difficulty == 3 && depth == 3) || depth == 5){
+        counter++;
+        if(counter == benchMark){
+          System.out.println("|*|-|-|-|-|");
+        }
+        if(counter == 2*benchMark){
+          System.out.println("|*|*|-|-|-|");
+        }
+        if(counter == 3*benchMark){
+          System.out.println("|*|*|*|-|-|");
+        }
+        if(counter == 4*benchMark){
+          System.out.println("|*|*|*|*|-|");
+        }
+        if(counter == 5*benchMark){
+          System.out.println("|*|*|*|*|*|");
+        }
+
+
       }
     }
     return new double[]{optimalVal, optimalIndex};
@@ -1023,7 +1833,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   }
 
   public void mouseDragged(MouseEvent me) { // while mouse moving, piece should follow
-
+    if(gameOver){
+      return;
+    }
     if (chessPiece == null)
       return;
 
@@ -1034,7 +1846,12 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   // Drop the chess piece back onto the chess board
 
   public void mouseReleased(MouseEvent e) {
-
+    if(gameOver && nowSafe){
+      //JPanel goback = (JPanel) chessBoard.getComponent(pieceR * 8 + pieceC);
+      //chessPiece.setVisible(true);
+     // goback.add(chessPiece);
+      //return;
+    }
     if (chessPiece == null)
       return;
 
@@ -1068,6 +1885,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           String captName = "";
           if(board[r][C] != null){
             captured1 = true;
+            blackPieces --;
             captName = board[r][C].name;
           }
           board[r][C] = null;
@@ -1109,6 +1927,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           }
 
           allPerfMoves.add(tempName);
+          System.out.println(tempName);
           board[r][C] = board[pieceR][pieceC];
           board[r][C].row = r;
           board[r][C].col = C;
@@ -1171,6 +1990,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
               colorKing(board, "b", "red");
               playernum = 5;
               gameOver = true;
+              TimerW.stop();
+              endGame("White", false, false);
             } else if (checkk == true && limit == false) { // moves, in check
               System.out.println("\n---Black is in check!---");
               colorKing(board, "b", "yellow");
@@ -1179,6 +2000,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
               colorKing(board, "b", "gray");
               colorKing(board, "w", "gray");
               gameOver = true;
+              TimerW.stop();
+              endGame("None", false, false);
             }
           } 
           
@@ -1221,6 +2044,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
               colorKing(board, "w", "red");
               playernum = 5;
               gameOver = true;
+              TimerW.stop();
+              endGame("Black", false, false);
             } else if (checkk == true && limit == false) { // moves, in check
               System.out.println("\n---White is in check!---");
               colorKing(board, "w", "yellow");
@@ -1229,6 +2054,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
               colorKing(board, "b", "gray");
               colorKing(board, "w", "gray");
               gameOver = true;
+              endGame("None", false, false);
+              TimerW.stop();
             }
           }
           
@@ -1244,7 +2071,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
 
     }
-    else{
+    else {
+
       JPanel goback = (JPanel) chessBoard.getComponent(pieceR * 8 + pieceC);
       chessPiece.setVisible(true);
       goback.add(chessPiece);
@@ -1254,218 +2082,289 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   }
 
 
+
+
   public void blackMove(Piece[][] b){
-    movelist = BlackGetSafeMoves(board);
-    int maxIndex = 0;
-    double maxValue = -500;
-    int rand = 1;
-    if(finalMoveCounter < 2) { //make openings more varied
-      ArrayList<Move> opening = new ArrayList<Move>();
-      for (int g = 0; g < movelist.size(); g++) {
-        if(movelist.get(g).piecemove.row == 1 && (movelist.get(g).piecemove.col == 3 || movelist.get(g).piecemove.col == 4 )){
-          opening.add(movelist.get(g));
+        if(gameOver){
+          return;
         }
-        else if((movelist.get(g).piecemove.name.contains("Knight")) && (movelist.get(g).c == 2 || movelist.get(g).c == 5)){
-          opening.add(movelist.get(g));
-        }
-      }
+        TimerW.stop();
+        timeLeftw -= timePassed;
+        timePassed = 0;
 
-      int rand1 = (int) (Math.random() * opening.size());
-      for (int d = 0; d < movelist.size(); d++) {
-        if(movelist.get(d).equals(opening.get(rand1))){
-          rand = d;
-        }
-      }
-    }
-    else {
+        long startTime = System.currentTimeMillis();
 
-      if (difficulty == 1) { //Easy level; just choose random
-        rand = (int) (Math.random() * movelist.size());
 
-        /**for(int m = 0; m < movelist.size(); m++){
-          if(movelist.get(m).piecemove.name.contains("Knight")){
-            if(movelist.get(m).r <= 2 && movelist.get(m).c >= 6){
-              rand = m;
-            }
-          } //THIS HELPS CHECK FOR REPETITION YO
-        }
-         **/
-      }
-      else if (difficulty == 2) { //Medium level; goes two layers deep
-        for (int t = 0; t < movelist.size(); t++) {
-          double curr = evaluatePosition(board, movelist.get(t), 1);
-          if (curr > maxValue) {
-            maxValue = curr;
-            maxIndex = t;
-          }
-        }
-        rand = maxIndex;
-      }
-      else if (difficulty == 3){ //Intermediate level; goes three moves deep + alpha/beta pruning
-        Collections.shuffle(movelist);
-        rand = (int) evaluatePosition2(board, movelist, 3, -50000, 50000, false)[1];
-      }
 
-      else {
-        difficulty = 3;
-        //Collections.shuffle(movelist);
-        ArrayList<Move> temp = movelist;
-        ArrayList<Move> supreme = new ArrayList<Move>();
-        for(int i = 0; i < Math.min(temp.size(), 6); i++){
-          double maxValues = 0;
-          int maxIndex2 = 0;
-          maxIndex2 = (int) evaluatePosition2(board, movelist, 2, -500000, 500000, false)[1];
-
-          supreme.add(temp.get(maxIndex2));
-
-          temp.remove(maxIndex2);
-        }
-        difficulty = 4;
-        int layerhigh = (int) evaluatePosition2(board, supreme, 5, -50000, 50000, false)[1];
-        difficulty = 3;
         movelist = BlackGetSafeMoves(board);
-        for(int k = 0; k < movelist.size(); k++){
+        int maxIndex = 0;
+        double maxValue = -500;
+        int rand = 1;
+        if(finalMoveCounter < 2) { //make openings more varied
+          ArrayList<Move> opening = new ArrayList<Move>();
+          for (int g = 0; g < movelist.size(); g++) {
+            if(movelist.get(g).piecemove.row == 1 && (movelist.get(g).piecemove.col == 3 || movelist.get(g).piecemove.col == 4 )){
+              opening.add(movelist.get(g));
+            }
+            else if((movelist.get(g).piecemove.name.contains("Knight")) && (movelist.get(g).c == 2 || movelist.get(g).c == 5)){
+              opening.add(movelist.get(g));
+            }
+          }
 
-          if(movelist.get(k).piecemove.name.equals(supreme.get(layerhigh).piecemove.name)){
+          int rand1 = (int) (Math.random() * opening.size());
+          for (int d = 0; d < movelist.size(); d++) {
+            if(movelist.get(d).equals(opening.get(rand1))){
+              rand = d;
+            }
+          }
+        } //GET THE MOVE
+        else {
 
-            if(movelist.get(k).r == supreme.get(layerhigh).r && movelist.get(k).c == supreme.get(layerhigh).c){
+          if (difficulty == 1) { //Easy level; just choose random
+           rand = (int) (Math.random() * movelist.size());
 
-              rand = k;
+            /**
+           for(int m = 0; m < movelist.size(); m++){
+             if(movelist.get(m).piecemove.name.contains("Knight")){
+             if(movelist.get(m).r <= 2 && movelist.get(m).c >= 6){
+             rand = m;
+             }
+             } //THIS HELPS CHECK FOR REPETITION YO
+             }**/
+
+          }
+          else if (difficulty == 2) { //Medium level; goes two layers deep
+            rand = (int) evaluatePosition2(board, movelist, 2, -50000, 50000, false)[1];
+            /**
+            for (int t = 0; t < movelist.size(); t++) {
+              double curr = evaluatePosition(board, movelist.get(t), 1);
+              if (curr > maxValue) {
+                maxValue = curr;
+                maxIndex = t;
+              }
+            }
+             **/
+            //rand = maxIndex;
+          }
+          else if (difficulty == 3){ //Intermediate level; goes three moves deep + alpha/beta pruning
+            System.out.println("AI Progress Bar\n");
+            System.out.println("|-|-|-|-|-|");
+            movelist = smartSort(board, movelist);
+            //System.out.println("We have" + movelist.size() + " for new, but " + movelist.size() + " for old");
+            rand = (int) evaluatePosition2(board, movelist, 3, -50000, 50000, false)[1];
+          }
+
+          else {
+            difficulty = 3;
+            //Collections.shuffle(movelist);
+
+            int a = 6; //default
+            if(whitePieces + blackPieces < 10 && movelist.size() < 20){
+              a = 30;
+            }
+            else if(whitePieces < 6 || blackPieces < 6){
+              a = 14;
+            }
+            else{
+              a = 10;
+            }
+            ArrayList<Move> supreme = new ArrayList<Move>();
+            ArrayList<Move> temp = smartSort(board, movelist);
+            for(int i = 0; i < Math.min(movelist.size(), a); i++){
+              supreme.add(temp.get(i));
+            }
+            System.out.println("AI Progress Bar\n");
+            System.out.println("|-|-|-|-|-|");
+            difficulty = 4;
+            FuncStartTime = System.currentTimeMillis();
+            int layerhigh = (int) evaluatePosition2(board, supreme, 5, -50000, 50000, false)[1];
+            difficulty = 3;
+            for(int k = 0; k < movelist.size(); k++){
+
+              if(movelist.get(k).piecemove.name.equals(supreme.get(layerhigh).piecemove.name)){
+
+                if(movelist.get(k).r == supreme.get(layerhigh).r && movelist.get(k).c == supreme.get(layerhigh).c){
+
+                  rand = k;
+                }
+              }
+            }
+            difficulty = 4;
+
+
+            //
+          }
+        }
+
+        //once move is obtained, easy to implement
+        pieceR = movelist.get(rand).piecemove.row;
+        pieceC = movelist.get(rand).piecemove.col;
+        int r = movelist.get(rand).r;
+        int C = movelist.get(rand).c;
+        JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
+        JPanel panel7 = (JPanel) chessBoard.getComponent(0);
+
+        piece7 = new JLabel(new ImageIcon("ChessRec/" + board[pieceR][pieceC].name+".png"));
+        panel7 = (JPanel) chessBoard.getComponent(8*r+C);
+        panel7.removeAll();
+        panel7.revalidate();
+        panel7.repaint();
+        panel7.add(piece7);
+        panel7 = (JPanel) chessBoard.getComponent(8*pieceR + pieceC);
+        panel7.removeAll();
+        panel7.revalidate();
+        panel7.repaint();
+
+        String temp2 = pieceR + "," + pieceC + ";" + r + "," + C + board[pieceR][pieceC].name;
+        if(board[r][C] != null){
+          whitePieces --;
+          temp2 += ("X" + board[r][C].name);
+        }
+        board[r][C] = null;
+
+        board[r][C] = board[pieceR][pieceC];
+        board[r][C].row = r;
+        board[r][C].col = C;
+        board[pieceR][pieceC] = null;
+
+        checkSpecials(board, r, C);
+
+        if(WhiteGetSafeMoves(board).size() < 1 && checkwhiteking(board)){
+          temp2 += "#";
+        }
+        else if(checkwhiteking(board)){
+
+          temp2 += "+";
+        }
+        //start move 0; do white then black, then move 1
+        //we go back from move 15 to move 5; must delete moves 6->15 so array values 12->30
+
+
+
+        allPerfMoves.add(temp2);
+        updateMoveList(allPerfMoves.get(allPerfMoves.size()-2), allPerfMoves.get(allPerfMoves.size()-1), finalMoveCounter);
+        updateBoardHash(board);
+
+
+        int compOrig = (pieceR * 8) + pieceC;
+        int compNew = (r * 8) + C;
+        JPanel template5 = (JPanel) chessBoard.getComponent(compOrig);
+        JPanel template6 = (JPanel) chessBoard.getComponent(compNew);
+        template5.setBackground(Color.orange);
+        template6.setBackground(Color.orange.darker());
+
+        boolean checkk = false; // r we in check?
+        boolean limit = false; // r there no moves left?
+        playernum = 1;
+        System.out.println("\n---------------\n");
+        System.out.println("It is now white's turn.");
+        moveCounter++;
+        finalMoveCounter++;
+        allmovelist = WhiteGetSafeMoves(board);
+        if (allmovelist.size() < 1) {
+          limit = true;
+        }
+        masterlist = blackgetAllMoves(board);
+
+        if (checkwhiteking(board) == true) {
+          checkk = true;
+          for (int i = 0; i < 8; i++) { // set parameter
+            for (int j = 0; j < 8; j++) {
+              if (board[i][j] != null) {
+                if (board[i][j].name.equals("wKing")) {
+                  board[i][j].attack = true;
+                }
+              }
+            }
+          }
+        } else {
+          for (int i = 0; i < 8; i++) { // set parameter
+            for (int j = 0; j < 8; j++) {
+              if (board[i][j] != null) {
+                if (board[i][j].name.equals("wKing")) {
+                  board[i][j].attack = false;
+                }
+              }
             }
           }
         }
-        difficulty = 4;
 
-
-
-
-        //
-      }
-    }
-
-    //once move is obtained, easy to implement
-    pieceR = movelist.get(rand).piecemove.row;
-    pieceC = movelist.get(rand).piecemove.col;
-    int r = movelist.get(rand).r;
-    int C = movelist.get(rand).c;
-    JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
-    JPanel panel7 = (JPanel) chessBoard.getComponent(0);
-
-    piece7 = new JLabel(new ImageIcon("ChessRec/" + board[pieceR][pieceC].name+".png"));
-    panel7 = (JPanel) chessBoard.getComponent(8*r+C);
-    panel7.removeAll();
-    panel7.revalidate();
-    panel7.repaint();
-    panel7.add(piece7);
-    panel7 = (JPanel) chessBoard.getComponent(8*pieceR + pieceC);
-    panel7.removeAll();
-    panel7.revalidate();
-    panel7.repaint();
-
-    String temp2 = pieceR + "," + pieceC + ";" + r + "," + C + board[pieceR][pieceC].name;
-    if(board[r][C] != null){
-      temp2 += ("X" + board[r][C].name);
-    }
-    board[r][C] = null;
-
-    board[r][C] = board[pieceR][pieceC];
-    board[r][C].row = r;
-    board[r][C].col = C;
-    board[pieceR][pieceC] = null;
-
-    checkSpecials(board, r, C);
-
-    if(WhiteGetSafeMoves(board).size() < 1 && checkwhiteking(board)){
-      temp2 += "#";
-    }
-    else if(checkwhiteking(board)){
-
-      temp2 += "+";
-    }
-    //start move 0; do white then black, then move 1
-    //we go back from move 15 to move 5; must delete moves 6->15 so array values 12->30
-
-
-
-    allPerfMoves.add(temp2);
-    updateMoveList(allPerfMoves.get(allPerfMoves.size()-2), allPerfMoves.get(allPerfMoves.size()-1), finalMoveCounter);
-    updateBoardHash(board);
-
-
-    int compOrig = (pieceR * 8) + pieceC;
-    int compNew = (r * 8) + C;
-    JPanel template5 = (JPanel) chessBoard.getComponent(compOrig);
-    JPanel template6 = (JPanel) chessBoard.getComponent(compNew);
-    template5.setBackground(Color.orange);
-    template6.setBackground(Color.orange.darker());
-
-    boolean checkk = false; // r we in check?
-    boolean limit = false; // r there no moves left?
-    playernum = 1;
-    System.out.println("\n---------------\n");
-    System.out.println("It is now white's turn.");
-    moveCounter++;
-    finalMoveCounter++;
-    allmovelist = WhiteGetSafeMoves(board);
-    if (allmovelist.size() < 1) {
-      limit = true;
-    }
-    masterlist = blackgetAllMoves(board);
-
-    if (checkwhiteking(board) == true) {
-      checkk = true;
-      for (int i = 0; i < 8; i++) { // set parameter
-        for (int j = 0; j < 8; j++) {
-          if (board[i][j] != null) {
-            if (board[i][j].name.equals("wKing")) {
-              board[i][j].attack = true;
-            }
-          }
+        if (checkk == true && limit == true) { // no moves, in check
+          System.out.println("\n---Black Wins by checkmate!---");
+          colorKing(board, "w", "red");
+          gameOver = true;
+          TimerW.stop();
+          endGame("Black", false, false);
+        } else if (checkk == true && limit == false) { // moves, in check
+          System.out.println("\n---White is in check!---");
+          colorKing(board, "w", "yellow");
+        } else if (checkk == false && limit == true) {
+          System.out.println("\n---Stalemate; it's a draw!");
+          colorKing(board, "b", "gray");
+          colorKing(board, "w", "gray");
+          gameOver = true;
+          TimerW.stop();
+          endGame("None", false, false);
         }
-      }
-    } else {
-      for (int i = 0; i < 8; i++) { // set parameter
-        for (int j = 0; j < 8; j++) {
-          if (board[i][j] != null) {
-            if (board[i][j].name.equals("wKing")) {
-              board[i][j].attack = false;
-            }
-          }
-        }
-      }
-    }
 
-    if (checkk == true && limit == true) { // no moves, in check
-      System.out.println("\n---Black Wins by checkmate!---");
-      colorKing(board, "w", "red");
+        if(checkBoardHash()){
+          System.out.println("\n---Stalemate; it's a draw by 3-move repetition!");
+          colorKing(board, "b", "gray");
+          colorKing(board, "w", "gray");
+          gameOver = true;
+          endGame("None", false, true);
+          TimerW.stop();
+        }
+
+        for (int g = 0; g < allPerfMoves.size(); g++){
+          //System.out.print(allPerfMoves.get(g) + " | ");
+          //System.out.println(boardHash.get(g));
+        }
+
+
+  TimerW.start();
+        long endTime = System.currentTimeMillis();
+        int timePasses = (int) ((endTime - startTime) / 1000);
+        if(timePasses == 0){
+          timePasses = 1;
+        }
+        System.out.println(timePasses);
+        timeLeftb -= timePasses;
+    int currMin = (int) (timeLeftb) / 60;
+    int currSec = (timeLeftb) % 60;
+    String nah = "";
+    if(currSec < 10){
+      nah = "0" + currSec;
+    }
+    else{
+      nah = String.valueOf(currSec);
+    }
+    String res = currMin + ":" + nah;
+    blackTimer.setText(res);
+
+
+    if(timeLeftb < 0) {
+      colorKing(board, "b", "red");
+      System.out.println("White wins on time!");
       gameOver = true;
-    } else if (checkk == true && limit == false) { // moves, in check
-      System.out.println("\n---White is in check!---");
-      colorKing(board, "w", "yellow");
-    } else if (checkk == false && limit == true) {
-      System.out.println("\n---Stalemate; it's a draw!");
+      TimerW.stop();
+      endGame("White", true, false);
+    }
+
+    if(whitePieces + blackPieces == 2){
+      System.out.println("\n---Stalemate; it's a draw by lack of material");
       colorKing(board, "b", "gray");
       colorKing(board, "w", "gray");
       gameOver = true;
+      endGame("None", false, false);
     }
-
-    if(checkBoardHash()){
-      System.out.println("\n---Stalemate; it's a draw by 3-move repetition!");
-      colorKing(board, "b", "gray");
-      colorKing(board, "w", "gray");
-      gameOver = true;
-    }
-
-    for (int g = 0; g < allPerfMoves.size(); g++){
-      //System.out.print(allPerfMoves.get(g) + " | ");
-      //System.out.println(boardHash.get(g));
-    }
-
-
 
   }
 
   public void performMove(String s){
+    if(s == "None"){
+      return;
+    }
     //7,2;3,6wBishopXbPawn
     int pieceR = Character.getNumericValue(s.charAt(0));
     String name = "";
@@ -1534,18 +2433,22 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         }
       }
       if (checkk == true && limit == true) { // no moves, in check
-        System.out.println("\n---White Wins by checkmate!---");
+        //System.out.println("\n---White Wins by checkmate!---");
         colorKing(board, "b", "red");
         playernum = 5;
-        gameOver = true;
+       // gameOver = true;
+        //TimerW.stop();
+       // endGame("White", false, false);
       } else if (checkk == true && limit == false) { // moves, in check
-        System.out.println("\n---Black is in check!---");
+       // System.out.println("\n---Black is in check!---");
         colorKing(board, "b", "yellow");
       } else if (checkk == false && limit == true) {
-        System.out.println("\n---Stalemate; it's a draw!");
+       // System.out.println("\n---Stalemate; it's a draw!");
         colorKing(board, "b", "gray");
         colorKing(board, "w", "gray");
-        gameOver = true;
+      //  gameOver = true;
+      //  TimerW.stop();
+       // endGame("None", false, false);
       }
     }
 
@@ -1623,7 +2526,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   }
 
   public void reverseMove(String s){
-
+    if(s == "None"){
+      return;
+    }
     String temp = "";
     String name = "";
     int pieceR;
@@ -1737,7 +2642,20 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
     }
     //check for pawn promotion / DE-motion
-    if(s.contains("Pawn") && board[pieceR][pieceC].name.contains("Queen")){
+    boolean pawnPromo = false;
+    if(s.contains("X")){
+      int ind = s.indexOf("X");
+      if(s.substring(7, ind).contains("Pawn") && board[pieceR][pieceC].name.contains("Queen")){
+        pawnPromo = true;
+      }
+    }
+    else{
+      if(s.substring(7).contains("Pawn") && board[pieceR][pieceC].name.contains("Queen")){
+        pawnPromo = true;
+      }
+    }
+
+    if(pawnPromo){
 
       String pawnColor = board[pieceR][pieceC].color;
       String named = pawnColor;
@@ -1816,44 +2734,47 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     }
 
     String result2 = "";
-
-    char e = blackInput.charAt(8);
-    if(e == 'K'&& blackInput.charAt(9) == 'n'){
-      e = 'N';
+    if(blackInput == "loss"){
+      result2 = "1 - 0";
     }
-    if(e != 'P') {
-      result2 += e;
-    }
-
-
-    if(e == 'N'){
-      result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(2)));
-    }
-    if(e == 'P' && blackInput.contains("X")){
-      result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(2)));
-    }
-    if(blackInput.contains("X")){
-      result2 += "x";
-    }
-    result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(6)));
-    int val2 = Character.getNumericValue(blackInput.charAt(4));
-    result2 += Integer.toString(8-val2);
-
-    if(blackInput.contains("#")){
-      result2 += "#";
-    }
-    if(blackInput.contains("+")){
-      result2 += "+";
-    }
-    if(blackInput.contains("King")){
-      if(blackInput.charAt(2) == '4' && blackInput.charAt(6) == '6'){
-        result2 = "O-O";
+    else {
+      char e = blackInput.charAt(8);
+      if (e == 'K' && blackInput.charAt(9) == 'n') {
+        e = 'N';
       }
-      if(blackInput.charAt(2) == '4' && blackInput.charAt(6) == '2'){
-        result2 = "O-O-O";
+      if (e != 'P') {
+        result2 += e;
+      }
+
+
+      if (e == 'N') {
+        result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(2)));
+      }
+      if (e == 'P' && blackInput.contains("X")) {
+        result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(2)));
+      }
+      if (blackInput.contains("X")) {
+        result2 += "x";
+      }
+      result2 += alphabet.charAt(Character.getNumericValue(blackInput.charAt(6)));
+      int val2 = Character.getNumericValue(blackInput.charAt(4));
+      result2 += Integer.toString(8 - val2);
+
+      if (blackInput.contains("#")) {
+        result2 += "#";
+      }
+      if (blackInput.contains("+")) {
+        result2 += "+";
+      }
+      if (blackInput.contains("King")) {
+        if (blackInput.charAt(2) == '4' && blackInput.charAt(6) == '6') {
+          result2 = "O-O";
+        }
+        if (blackInput.charAt(2) == '4' && blackInput.charAt(6) == '2') {
+          result2 = "O-O-O";
+        }
       }
     }
-
     //now repeat for black
 
     int lengthy = result.length();
@@ -2085,7 +3006,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       for (int i = 0; i < 8; i++) {
         JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
         if (i % 2 == j % 2) {
-          reset.setBackground(Color.blue);
+          reset.setBackground(primaryCol);
         } else {
           reset.setBackground(Color.white);
         }
@@ -2114,8 +3035,33 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     boardHash.add(key);
   }
 
+
+  public void ultraBoardHash(Piece[][] b){
+    String key = "";
+    for(int i = 0; i < 8; i++){
+      for(int j = 0; j < 8; j++){
+        if(b[i][j] != null) {
+          key += b[i][j].name.charAt(0);
+          if (b[i][j].name.contains("Knight")) {
+            key += "N";
+          } else {
+            key += b[i][j].name.charAt(1);
+          }
+        }
+        else{
+          key += "yy"; //empty
+        }
+      }
+    }
+    if(ultraHash.size() > 500000){
+      ultraHash.remove(0);
+      ultraVal.remove(0);
+    }
+    ultraHash.add(key);
+  }
+
   public boolean checkBoardHash(){
-    ArrayList<String> kam = new ArrayList<String>();
+    ArrayList<String> kam = boardHash;
     Collections.sort(kam);
     int dupl = 0;
     for(int i = 1; i < kam.size(); i++){
@@ -2132,7 +3078,70 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     return false;
   }
 
+  public void endGame(String player, boolean time, boolean threeMove){
+    gameOver = true;
+    TimerW.stop();
+    TimerB.stop();
+    nowSafe = true;
+    if(timeLeftw <= 0){
+      whiteTimer.setText("0:00");
+      whiteTimer.setBackground(Color.red);
+    }
+    if(timeLeftb <= 0){
+      blackTimer.setText("0:00");
+      blackTimer.setBackground(Color.red);
+    }
+    JFrame frame5 = new JFrame("Ending Message");
+    frame5.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    frame5.setSize(300, 100);
+    frame5.setAlwaysOnTop(true);
+    frame5.setLocationRelativeTo( null );
+    frame5.setLayout(new BorderLayout());
+
+    JLabel endMsg = new JLabel("", SwingConstants.CENTER);
+    endMsg.setFont(new Font("Serif", Font.PLAIN, 18));
+    if(player == "None"){
+      if(threeMove){
+        endMsg.setText("Stalemate by 3-move repetition!");
+      }
+      else{
+        endMsg.setText("Stalemate! Neither player wins.");
+      }
+    }
+    else{
+      if(time){
+        endMsg.setText(player + " has won on time!");
+      }
+      else{
+        endMsg.setText(player + " has won by checkmate!");
+      }
+    }
+    frame5.add(endMsg, BorderLayout.CENTER);
+    endMsg.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+    endMsg.setBackground(Color.white);
+    endMsg.setOpaque(true);
+    frame5.setVisible(true);
+    if(player == "White"){
+      moveCounter++;
+      finalMoveCounter++;
+      finalMoveNum = finalMoveCounter;
+      updateMoveList(allPerfMoves.get(allPerfMoves.size()-1), "loss", finalMoveCounter);
+      allPerfMoves.add("None");
+    } else if (player == "Black"){
+      whiteMoves.append("\n0-1");
+    }
+    else{
+      whiteMoves.append("1/2-1/2");
+    }
+  }
+
   public void mouseClicked(MouseEvent e) {
+    if(gameOver){
+      return;
+    }
+    if(playernum == 0){
+      return;
+    }
     if(playernum == 1) {
       Component d = chessBoard.findComponentAt(e.getX(), e.getY());
       int newx = 0;
@@ -2148,12 +3157,12 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         }
         int compnum2 = (newx * 8) + newy;
         JPanel template3 = (JPanel) chessBoard.getComponent(compnum2);
-        if ((template3.getBackground() == Color.white || template3.getBackground() == Color.blue)) {
+        if ((template3.getBackground() == Color.white || template3.getBackground() == primaryCol)) {
           return;
         }
       }
       if (d instanceof JPanel) {
-        if ((d.getBackground() == Color.white || d.getBackground() == Color.blue)) {
+        if ((d.getBackground() == Color.white || d.getBackground() == primaryCol)) {
           return;
         }
         Point parentLocation2 = d.getLocation(); // set piece to mouse location, use xAdjustment and yAdjustment
@@ -2168,6 +3177,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       String captName2 = "";
       if (board[newx][newy] != null) {
         captured2 = true;
+        blackPieces --;
         captName2 = board[newx][newy].name;
       }
       board[newx][newy] = null;
@@ -2195,6 +3205,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         whiteMoves.append("\n---New Branch---\n");
       }
       allPerfMoves.add(tempName2);
+      System.out.println(tempName2);
+
 
 
       JLabel piece9 = new JLabel(new ImageIcon("bKnight.png"));
@@ -2255,6 +3267,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           colorKing(board, "b", "red");
           playernum = 5;
           gameOver = true;
+          TimerW.stop();
+          endGame("White", false, false);
         } else if (checkk == true && limit == false) { // moves, in check
           System.out.println("\n---Black is in check!---");
           colorKing(board, "b", "yellow");
@@ -2263,6 +3277,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           colorKing(board, "b", "gray");
           colorKing(board, "w", "gray");
           gameOver = true;
+          TimerW.stop();
+          endGame("None", false, false);
         }
       }
 
@@ -2283,10 +3299,15 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 }
 
   public void mouseMoved(MouseEvent e) {
+    if (gameOver == true) {
+      return;
+    }
     if(playernum == 0 && gameOver == false) {
       blackMove(board);
     }
+
   }
+
 
   public void mouseEntered(MouseEvent e) {
 
