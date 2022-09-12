@@ -228,9 +228,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
 
       int row = (i / 8) % 2;
       if (row == 0)
-        square.setBackground(i % 2 == 0 ? primaryCol : Color.white);
+        square.setBackground(i % 2 == 0 ?  Color.white : primaryCol);
       else
-        square.setBackground(i % 2 == 0 ? Color.white : primaryCol);
+        square.setBackground(i % 2 == 0 ? primaryCol : Color.white);
     } // if (i % 2) ? (if true make white) else (if false make blue)
 
 
@@ -891,107 +891,105 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     emptyRight11.setPreferredSize(new Dimension(40, 30));
     confirm.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e) {
-        sliderDifficulty = difficultySlider.getValue();
         int customChallenge = customList.getSelectedIndex();
-        if(customChallenge != 4){
-          toggled = false;
-        }
-        if(customChallenge != 0) {
-          trueCustomChallenge = customChallenge;
-          for(int i = 0; i < 8; i++){
-            for(int j = 0; j < 8; j++){
-              board[i][j] = null;
-              JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (i) + (j));
-              panel15.removeAll();
-              panel15.revalidate();
-              panel15.repaint();
+        if(moveCounter == 0) {
+
+          if (customChallenge != 4) {
+            toggled = false;
+          }
+          if (customChallenge != 0) {
+            trueCustomChallenge = customChallenge;
+            for (int i = 0; i < 8; i++) {
+              for (int j = 0; j < 8; j++) {
+                board[i][j] = null;
+                JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (i) + (j));
+                panel15.removeAll();
+                panel15.revalidate();
+                panel15.repaint();
+              }
             }
-          }
-          for (int j = 0; j < 8; j++) { // initialize board with backend pieces; store values to be accessed later
-            board[6][j] = new Pawn(6, j, "white", false, false);
-          }
-          for (int j = 0; j < 8; j++) {
-            board[1][j] = new Pawn(1, j, "black", false, false);
-          }
-          board[7][1] = new Knight(7, 1, "white");
-          board[7][6] = new Knight(7, 6, "white");
-          board[0][6] = new Knight(0, 6, "black");
-          board[0][1] = new Knight(0, 1, "black");
-
-          board[7][0] = new Rook(7, 0, "white", false);
-          board[7][7] = new Rook(7, 7, "white", false);
-          board[0][7] = new Rook(0, 7, "black", false);
-          board[0][0] = new Rook(0, 0, "black", false);
-
-          board[7][2] = new Bishop(7, 2, "white");
-          board[7][5] = new Bishop(7, 5, "white");
-          board[0][2] = new Bishop(0, 2, "black");
-          board[0][5] = new Bishop(0, 5, "black");
-
-          board[7][3] = new Queen(7, 3, "white");
-          board[0][3] = new Queen(0, 3, "black");
-
-          board[7][4] = new King(7, 4, "white", false, false, false);
-          board[0][4] = new King(0, 4, "black", false, false, false);
-
-          WhiteKing = board[7][4];
-          BlackKing = board[0][4];
-
-
-          JLabel piece = new JLabel(new ImageIcon("bKnight.png"));
-          JPanel panel = (JPanel) chessBoard.getComponent(0);
-          // Add in all the pieces to make board
-          for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) { // initialize board with backend pieces; store values to be accessed later
+              board[6][j] = new Pawn(6, j, "white", false, false);
+            }
             for (int j = 0; j < 8; j++) {
-              if (board[i][j] != null) {
-                String piecename = board[i][j].name;
-                int position = (i * 8) + j;
-                piece = new JLabel(new ImageIcon("ChessRec/" + piecename + ".png"));
-                panel = (JPanel) chessBoard.getComponent(position);
-                panel.add(piece);
+              board[1][j] = new Pawn(1, j, "black", false, false);
+            }
+            board[7][1] = new Knight(7, 1, "white");
+            board[7][6] = new Knight(7, 6, "white");
+            board[0][6] = new Knight(0, 6, "black");
+            board[0][1] = new Knight(0, 1, "black");
+
+            board[7][0] = new Rook(7, 0, "white", false);
+            board[7][7] = new Rook(7, 7, "white", false);
+            board[0][7] = new Rook(0, 7, "black", false);
+            board[0][0] = new Rook(0, 0, "black", false);
+
+            board[7][2] = new Bishop(7, 2, "white");
+            board[7][5] = new Bishop(7, 5, "white");
+            board[0][2] = new Bishop(0, 2, "black");
+            board[0][5] = new Bishop(0, 5, "black");
+
+            board[7][3] = new Queen(7, 3, "white");
+            board[0][3] = new Queen(0, 3, "black");
+
+            board[7][4] = new King(7, 4, "white", false, false, false);
+            board[0][4] = new King(0, 4, "black", false, false, false);
+
+            WhiteKing = board[7][4];
+            BlackKing = board[0][4];
+
+
+            JLabel piece = new JLabel(new ImageIcon("bKnight.png"));
+            JPanel panel = (JPanel) chessBoard.getComponent(0);
+            // Add in all the pieces to make board
+            for (int i = 0; i < 8; i++) {
+              for (int j = 0; j < 8; j++) {
+                if (board[i][j] != null) {
+                  String piecename = board[i][j].name;
+                  int position = (i * 8) + j;
+                  piece = new JLabel(new ImageIcon("ChessRec/" + piecename + ".png"));
+                  panel = (JPanel) chessBoard.getComponent(position);
+                  panel.add(piece);
+                }
               }
             }
           }
-        }
-        if(customChallenge == 5){
-          customChallenge = (int) (Math.random() * 4 + 1);
-        }
-        if(customChallenge == 1){ //take away queen
-          JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (7) + 3);
-          panel15.removeAll();
-          panel15.revalidate();
-          panel15.repaint();
-          board[7][3] = null;
-        }
-        else if(customChallenge == 2){ //take away cental 4 pawns
-          for(int i = 0; i < 4; i++){
-            JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (6) + (2+i));
+          if (customChallenge == 5) {
+            customChallenge = (int) (Math.random() * 4 + 1);
+          }
+          if (customChallenge == 1) { //take away queen
+            JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (7) + 3);
             panel15.removeAll();
             panel15.revalidate();
             panel15.repaint();
-            board[6][2+i] = null;
-          }
+            board[7][3] = null;
+          } else if (customChallenge == 2) { //take away cental 4 pawns
+            for (int i = 0; i < 4; i++) {
+              JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (6) + (2 + i));
+              panel15.removeAll();
+              panel15.revalidate();
+              panel15.repaint();
+              board[6][2 + i] = null;
+            }
 
-        }
-        else if(customChallenge == 3){ //take away bishops + knights
-          for(int i = 0; i < 2; i++){
-            JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (7) + (1+i));
-            panel15.removeAll();
-            panel15.revalidate();
-            panel15.repaint();
-            board[7][1+i] = null;
-          }
-          for(int i = 0; i < 2; i++){
-            JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (7) + (5+i));
-            panel15.removeAll();
-            panel15.revalidate();
-            panel15.repaint();
-            board[7][5+i] = null;
-          }
-        }
-        else if(customChallenge == 4){ //make blind
+          } else if (customChallenge == 3) { //take away bishops + knights
+            for (int i = 0; i < 2; i++) {
+              JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (7) + (1 + i));
+              panel15.removeAll();
+              panel15.revalidate();
+              panel15.repaint();
+              board[7][1 + i] = null;
+            }
+            for (int i = 0; i < 2; i++) {
+              JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (7) + (5 + i));
+              panel15.removeAll();
+              panel15.revalidate();
+              panel15.repaint();
+              board[7][5 + i] = null;
+            }
+          } else if (customChallenge == 4) { //make blind
             blind = true;
-            for(int i = 0; i < 2; i++) {
+            for (int i = 0; i < 2; i++) {
               for (int j = 0; j < 8; j++) {
                 JPanel panel15 = (JPanel) chessBoard.getComponent(8 * (i) + (j));
                 panel15.removeAll();
@@ -999,6 +997,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
                 panel15.repaint();
               }
             }
+          }
         }
 
 
@@ -1031,9 +1030,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           for (int i = 0; i < 8; i++) {
             JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
             if (i % 2 == j % 2) {
-              reset.setBackground(primaryCol);
-            } else {
               reset.setBackground(Color.white);
+            } else {
+              reset.setBackground(primaryCol);
             }
           }
         }
@@ -1253,9 +1252,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           for (int i = 0; i < 8; i++) {
             JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
             if (i % 2 == j % 2) {
-              reset.setBackground(primaryCol);
-            } else {
               reset.setBackground(Color.white);
+            } else {
+              reset.setBackground(primaryCol);
             }
           }
         }
@@ -2039,7 +2038,6 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           }
 
           allPerfMoves.add(tempName);
-          System.out.println(tempName);
           board[r][C] = board[pieceR][pieceC];
           board[r][C].row = r;
           board[r][C].col = C;
@@ -3126,9 +3124,9 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       for (int i = 0; i < 8; i++) {
         JPanel reset = (JPanel) chessBoard.getComponent((i * 8) + j);
         if (i % 2 == j % 2) {
-          reset.setBackground(primaryCol);
-        } else {
           reset.setBackground(Color.white);
+        } else {
+          reset.setBackground(primaryCol);
         }
       }
     } // RESET BOARD
