@@ -1,7 +1,4 @@
-package ChessRec;
-
-import ChessRec.Move;
-import ChessRec.Piece;
+package ChessRec; //this is a personal package where all other code is stored, i.e pieces class + move function
 
 import java.awt.*;
 import java.awt.event.*;
@@ -64,6 +61,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
   int secChosen = 0;
   boolean blind = false;
   boolean toggled = true;
+  boolean invis = false;
   Color tempCol = Color.blue;
   JComboBox customList;
   int trueCustomChallenge = 0;
@@ -732,12 +730,6 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         int newSec = 5 * (int) (Math.random() * 11);
         minuteChoose.setValue(newMin);
         secondChoose.setValue(newSec);
-        if(Math.random() < 0.5) {
-          toggled = true;
-        }
-        else{
-          toggled = false;
-        }
         settingsLayout.revalidate();
 
       }
@@ -894,8 +886,8 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
         int customChallenge = customList.getSelectedIndex();
         if(moveCounter == 0) {
 
-          if (customChallenge != 4) {
-            toggled = false;
+          if (customChallenge == 4) {
+            invis = true;
           }
           if (customChallenge != 0) {
             trueCustomChallenge = customChallenge;
@@ -2320,7 +2312,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
           panel7.removeAll();
           panel7.revalidate();
           panel7.repaint();
-          if(!toggled) {
+          if(!invis) {
             panel7.add(piece7);
           }
           panel7 = (JPanel) chessBoard.getComponent(8 * pieceR + pieceC);
@@ -2493,7 +2485,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
     JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
     JPanel panel7 = (JPanel) chessBoard.getComponent(0);
 
-    if(!(toggled && board[pieceR][pieceC].color == "black")) {
+    if(!(invis && board[pieceR][pieceC].color == "black")) {
       piece7 = new JLabel(new ImageIcon("ChessRec/" + board[pieceR][pieceC].name + ".png"));
       panel7 = (JPanel) chessBoard.getComponent(8 * newR + newC);
       panel7.removeAll();
@@ -2662,7 +2654,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       JLabel piece7 = new JLabel(new ImageIcon("bKnight.png"));
       JPanel panel7 = (JPanel) chessBoard.getComponent(0);
 
-      if(!(toggled && board[pieceR][pieceC].color == "black")) {
+      if(!(invis && board[pieceR][pieceC].color == "black")) {
         piece7 = new JLabel(new ImageIcon("ChessRec/" + capturedName + ".png"));
         panel7 = (JPanel) chessBoard.getComponent(8 * newR + newC);
         panel7.removeAll();
@@ -2783,7 +2775,7 @@ public class ChessGameDemo extends JFrame implements MouseListener, MouseMotionL
       }
       JLabel piece10;
       JPanel panel10;
-      if(!(toggled && board[pieceR][pieceC].color == "black")) {
+      if(!(invis && board[pieceR][pieceC].color == "black")) {
         piece10 = new JLabel(new ImageIcon("ChessRec/" + named + ".png"));
         panel10 = (JPanel) chessBoard.getComponent(8 * pieceR + pieceC);
         panel10.removeAll();
