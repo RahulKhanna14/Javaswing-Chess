@@ -4,7 +4,7 @@
 
 ## Overview
 A complex Full-Stack Chess Application allowing users to play a highly personalized game against a challenging AI. All move-sets and rules of chess are completely implemented, including pawn promotion, en passant, castling, three-fold repetition, etc. It features customizable settings including varying AI difficulty (~200 ELO - 1400 ELO), varying time controls, varying color pallete for the board, and unique optional challenges such as playing half-blind (can't see AI's pieces) or playing without one's queen.
- The game also maintains a FIDE-style move-list and allows move travesal, such as taking back a bad move. 
+ The game also maintains a FIDE-style move-list and allows move traversal, such as taking back a bad move. 
 
 ## Technologies and Algorithms Utilized
 * Front-end interface was developed using JavaSwing GUI - JFrame, BorderLayout, GridLayout, and SwingWorker for asynchronous threading (W.I.P.)
